@@ -1,0 +1,545 @@
+<title>Casa di Alex</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..800&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: app a schermo intero — barra in alto con le tre modalità, scena al centro, comandi in basso sopra la scena */
+:root{
+  --bg:#ecedeb;          /* intonaco */
+  --panel:#f8f8f6;
+  --ink:#1d2023;         /* antracite infissi */
+  --muted:#626a70;
+  --line:rgba(29,32,35,.14);
+  --oak:#8f5f32;         /* rovere */
+  --oak-ink:#ffffff;
+  --scrim:rgba(248,248,246,.88);
+  --display:"Archivo","Arial Narrow",system-ui,sans-serif;
+  --body:"Archivo",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#131516;--panel:#1c1f21;--ink:#e9ebec;--muted:#9aa3a9;--line:rgba(233,235,236,.14);
+  --oak:#c8925c;--oak-ink:#17110b;--scrim:rgba(28,31,33,.86);color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#131516;--panel:#1c1f21;--ink:#e9ebec;--muted:#9aa3a9;--line:rgba(233,235,236,.14);
+  --oak:#c8925c;--oak-ink:#17110b;--scrim:rgba(28,31,33,.86);color-scheme:dark}
+
+[hidden]{display:none!important}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);overflow:hidden}
+.app{height:100%;display:flex;flex-direction:column}
+header{display:flex;align-items:center;gap:12px 20px;flex-wrap:wrap;padding:10px 16px;border-bottom:1px solid var(--line);background:var(--panel)}
+.brand{display:flex;align-items:baseline;gap:10px;min-width:0}
+.brand h1{margin:0;font-family:var(--display);font-stretch:118%;font-weight:750;font-size:19px;letter-spacing:-.01em;text-wrap:balance}
+.brand span{font-family:var(--mono);font-size:11.5px;color:var(--muted);white-space:nowrap}
+nav.tabs{display:flex;gap:2px;margin-left:auto;background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:2px}
+nav.tabs button{font:600 13px var(--body);border:0;background:transparent;color:var(--muted);padding:7px 12px;border-radius:7px;cursor:pointer}
+nav.tabs button[aria-selected="true"]{background:var(--ink);color:var(--bg)}
+button:focus-visible,.chip:focus-visible{outline:2px solid var(--oak);outline-offset:2px}
+
+main{position:relative;flex:1;min-height:0}
+section.view{position:absolute;inset:0}
+#three{position:absolute;inset:0;display:block;width:100%;height:100%;touch-action:none;outline:none}
+
+.dock{position:absolute;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.row{display:flex;gap:6px;flex-wrap:wrap;pointer-events:auto}
+.chip{font:600 12.5px var(--body);color:var(--ink);background:var(--scrim);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid var(--line);border-radius:999px;padding:8px 13px;cursor:pointer;white-space:nowrap}
+.chip.on{background:var(--oak);border-color:var(--oak);color:var(--oak-ink)}
+.chip.toggle::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:7px;vertical-align:1px;border:1.5px solid currentColor}
+.chip.toggle.on::before{background:currentColor}
+.hint{align-self:flex-start;font-size:12px;color:var(--muted);background:var(--scrim);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid var(--line);border-radius:8px;padding:6px 10px;pointer-events:none;max-width:100%}
+.room{position:absolute;top:12px;left:12px;background:var(--scrim);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid var(--line);border-radius:10px;padding:8px 12px;pointer-events:none}
+.room b{display:block;font-family:var(--display);font-stretch:112%;font-size:16px}
+.room span{font-family:var(--mono);font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+
+.labels{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.lbl{position:absolute;transform:translate(-50%,-50%);text-align:center;background:var(--scrim);border:1px solid var(--line);border-radius:7px;padding:3px 7px;white-space:nowrap}
+.lbl b{display:block;font:650 11.5px var(--body)}
+.lbl span{display:block;font:500 10.5px var(--mono);color:var(--muted)}
+
+.status{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:24px;color:var(--muted);font-size:14px}
+.status p{max-width:34ch;margin:0;line-height:1.5}
+.status .bar{width:180px;height:3px;background:var(--line);border-radius:3px;margin:12px auto 0;overflow:hidden}
+.status .bar i{display:block;height:100%;width:0;background:var(--oak);transition:width .2s}
+
+/* Tour 360° in CSS 3D: funziona anche senza WebGL */
+#pano{position:absolute;inset:0;overflow:hidden;background:#000;touch-action:none;cursor:grab}
+#pano:active{cursor:grabbing}
+#cube{position:absolute;left:50%;top:50%;width:0;height:0;transform-style:preserve-3d}
+#cube img{position:absolute;width:1024px;height:1024px;left:-512px;top:-512px;backface-visibility:hidden;user-select:none;-webkit-user-drag:none;max-width:none}
+
+/* Galleria render */
+#gallery{overflow:auto;padding:16px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,340px),1fr));gap:14px;max-width:1400px;margin:0 auto;padding-bottom:24px}
+figure{margin:0;display:flex;flex-direction:column;gap:6px}
+figure button{padding:0;border:0;background:none;cursor:zoom-in;border-radius:8px;overflow:hidden;display:block}
+figure img{display:block;width:100%;aspect-ratio:16/9;object-fit:cover}
+figcaption{font-size:13px;color:var(--muted)}
+figcaption b{color:var(--ink);font-weight:650;margin-right:6px}
+.lightbox{position:fixed;inset:0;background:rgba(10,11,12,.94);display:grid;place-items:center;z-index:10;padding:16px;cursor:zoom-out}
+.lightbox img{max-height:100%;border-radius:4px}
+@media (max-width:560px){
+  header{padding:8px 12px}
+  nav.tabs{margin-left:0;width:100%}
+  nav.tabs button{flex:1}
+  .brand span{display:none}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="app">
+  <header>
+    <div class="brand"><h1>Casa di Alex</h1><span>villa monofamiliare · ≈ 124 m² netti · h 2,70 m</span></div>
+    <nav class="tabs" role="tablist">
+      <button id="tab-3d" role="tab" aria-selected="true" data-view="v3d">Modello 3D</button>
+      <button id="tab-360" role="tab" aria-selected="false" data-view="v360">Tour 360°</button>
+      <button id="tab-gal" role="tab" aria-selected="false" data-view="vgal">Render</button>
+    </nav>
+  </header>
+  <main>
+    <!-- MODELLO 3D -->
+    <section class="view" id="v3d">
+      <canvas id="three" tabindex="0" aria-label="Modello 3D della casa"></canvas>
+      <div class="labels" id="labels"></div>
+      <div class="status" id="status"><div><p id="statusText">Carico il modello della casa…</p><div class="bar"><i id="bar"></i></div></div></div>
+      <div class="room" id="roomInfo" hidden><b id="roomName"></b><span id="roomDim"></span></div>
+      <div class="dock">
+        <div class="hint" id="hint">Trascina per ruotare · pizzica o rotella per zoomare · due dita per spostare</div>
+        <div class="row" id="views"></div>
+        <div class="row">
+          <button class="chip toggle" id="tRoof">Tetto</button>
+          <button class="chip toggle on" id="tLabels">Nomi e misure</button>
+          <button class="chip toggle" id="tWalk">Passeggia</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- TOUR 360 -->
+    <section class="view" id="v360" hidden>
+      <div id="pano"><div id="cube"></div></div>
+      <div class="room" id="panoInfo"><b id="panoName"></b><span id="panoDim"></span></div>
+      <div class="dock">
+        <div class="hint">Trascina per guardarti intorno · render Cycles fotorealistici</div>
+        <div class="row" id="panoList"></div>
+      </div>
+    </section>
+
+    <!-- GALLERIA -->
+    <section class="view" id="vgal" hidden>
+      <div id="gallery"><div class="grid" id="grid"></div></div>
+    </section>
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/loaders/GLTFLoader.js"></script>
+<script>
+(function(){
+"use strict";
+// ---------------------------------------------------------------- dati della casa (metri, x est, y sud)
+var ROOMS=[
+  ['Soggiorno',6.4,11.6,'3,95 × 5,05 m'],['Cucina',6.35,16.3,'4,20 × 4,00 m'],
+  ['Camera',2.25,8.9,'4,00 × 4,00 m'],['Cameretta',5.5,2.4,'2,70 × 4,30 m'],
+  ['Studio',1.55,5.25,'≈ 2,60 × 3,00 m'],['Bagno piccolo',1.55,2.7,'2,60 × 1,70 m'],
+  ['Ripostiglio',1.55,1.0,'≈ 2,60 × 1,50 m'],['Bagno grande',7.05,6.4,'2,75 × 1,80 m'],
+  ['Lavanderia',7.1,8.4,'≈ 2,75 × 1,70 m'],['Garage',-1.8,8.9,'3,55 × 4,10 m'],
+  ['Corridoio',3.5,4.0,'largo 1,10 m'],['Doccia',6.2,5.15,'1,30 × 1,00 m'],['W.C.',-2.7,6.1,'1,70 × 1,20 m']
+];
+var VIEWS={
+  esterno:{label:'Esterno',orbit:true,roof:true,pos:[-7.5,5.2,25.5],target:[2.8,1.0,13]},
+  pianta:{label:'Interni dall\'alto',orbit:true,roof:false,pos:[2.4,21,20.5],target:[2.4,0,9.5]},
+  soggiorno:{label:'Soggiorno',walk:true,pos:[4.8,14.1],look:[7.6,9.9],room:0},
+  cucina:{label:'Cucina',walk:true,pos:[4.7,14.95],look:[7.9,18.1],room:1},
+  camera:{label:'Camera',walk:true,pos:[3.2,10.5],look:[0.6,8.4],room:2},
+  ingresso:{label:'Giardino',walk:true,pos:[-2.4,21.8],look:[3.6,12.6],eye:1.65}
+};
+var PANOS=[
+  {id:'soggiorno',name:'Soggiorno',dim:'3,95 × 5,05 m · divano Tosaro 240 × 165',yaw:35},
+  {id:'cucina',name:'Cucina',dim:'4,20 × 4,00 m · vetrata telescopica 1,80 m',yaw:-110},
+  {id:'camera',name:'Camera',dim:'4,00 × 4,00 m',yaw:-50},
+  {id:'giardino',name:'Giardino',dim:'fronte ≈ 7,8 × 11,3 m (stima)',yaw:30}
+];
+var RENDERS=[
+  ['ext_ingresso','Ingresso','facciata ovest, portoncino e porta finestra della cucina'],
+  ['ext_aerea','Vista aerea','lotto ≈ 300 m², fronte e piazzale'],
+  ['int_soggiorno','Soggiorno','divano Tosaro, parete attrezzata, porta scorrevole in vetro'],
+  ['int_divano','Soggiorno','verso la vetrata telescopica della cucina'],
+  ['int_cucina','Cucina','finestrone 1,50 × 0,90 sul lavello'],
+  ['int_cucina2','Cucina','verso il soggiorno, vetrata da 1,80 m']
+];
+
+// ---------------------------------------------------------------- schede
+var tabs=[].slice.call(document.querySelectorAll('nav.tabs button'));
+var current='v3d';
+function show(id){
+  current=id;
+  tabs.forEach(function(b){b.setAttribute('aria-selected',String(b.dataset.view===id));});
+  ['v3d','v360','vgal'].forEach(function(v){document.getElementById(v).hidden=(v!==id);});
+  if(id==='v3d'&&three) three.resize();
+  if(id==='v360') pano.open(pano.cur||PANOS[0].id);
+  if(id==='vgal') gallery();
+  try{localStorage.setItem('casa-tab',id);}catch(e){}
+}
+tabs.forEach(function(b){b.onclick=function(){show(b.dataset.view);};});
+
+// ---------------------------------------------------------------- galleria
+var galDone=false;
+function gallery(){
+  if(galDone) return; galDone=true;
+  var g=document.getElementById('grid');
+  RENDERS.forEach(function(r){
+    var f=document.createElement('figure');
+    f.innerHTML='<button type="button" aria-label="Ingrandisci '+r[1]+'"><img loading="lazy" src="renders/'+r[0]+'.jpg" alt="Render '+r[1]+': '+r[2]+'"></button><figcaption><b>'+r[1]+'</b>'+r[2]+'</figcaption>';
+    f.querySelector('button').onclick=function(){
+      var lb=document.createElement('div'); lb.className='lightbox';
+      lb.innerHTML='<img src="renders/'+r[0]+'.jpg" alt="">';
+      lb.onclick=function(){lb.remove();};
+      document.body.appendChild(lb);
+    };
+    g.appendChild(f);
+  });
+}
+
+// ---------------------------------------------------------------- tour 360 (cubo CSS 3D)
+var pano=(function(){
+  var el=document.getElementById('pano'), cube=document.getElementById('cube');
+  var H=512, yaw=0, pitch=0, fov=75, P=600, drag=null, api={cur:null};
+  // facce: n e s w = orizzontali; u = su; d = giù (trasformazioni in CSS, occhio al centro del cubo)
+  var FACES={n:'translateZ(-'+H+'px)',e:'rotateY(-90deg) translateZ(-'+H+'px)',s:'rotateY(180deg) translateZ(-'+H+'px)',
+             w:'rotateY(90deg) translateZ(-'+H+'px)',u:'rotateX(-90deg) translateZ(-'+H+'px)',d:'rotateX(90deg) translateZ(-'+H+'px)'};
+  var imgs={};
+  Object.keys(FACES).forEach(function(k){
+    var i=document.createElement('img'); i.alt=''; i.draggable=false;
+    i.style.transform=FACES[k]+' scale(1.003)';
+    cube.appendChild(i); imgs[k]=i;
+  });
+  function update(){
+    var w=el.clientWidth,h=el.clientHeight; if(!w) return;
+    P=(h/2)/Math.tan(fov*Math.PI/360);
+    el.style.perspective=P+'px';
+    cube.style.transform='translateZ('+P+'px) rotateX('+pitch+'deg) rotateY('+yaw+'deg)';
+  }
+  var list=document.getElementById('panoList');
+  PANOS.forEach(function(p){
+    var b=document.createElement('button'); b.className='chip'; b.textContent=p.name; b.dataset.id=p.id;
+    b.onclick=function(){api.open(p.id,true);}; list.appendChild(b);
+  });
+  api.open=function(id,resetView){
+    var p=PANOS.filter(function(q){return q.id===id;})[0];
+    if(api.cur!==id||resetView){ yaw=p.yaw; pitch=0; }
+    api.cur=id;
+    Object.keys(imgs).forEach(function(k){imgs[k].src='pano/'+id+'_'+k+'.jpg';});
+    document.getElementById('panoName').textContent=p.name;
+    document.getElementById('panoDim').textContent=p.dim;
+    [].forEach.call(list.children,function(b){b.classList.toggle('on',b.dataset.id===id);});
+    update();
+  };
+  el.addEventListener('pointerdown',function(e){drag={x:e.clientX,y:e.clientY};try{el.setPointerCapture(e.pointerId);}catch(_){}});
+  el.addEventListener('pointermove',function(e){
+    if(!drag) return;
+    var k=fov/el.clientHeight;
+    yaw-=(e.clientX-drag.x)*k; pitch=Math.max(-85,Math.min(85,pitch+(e.clientY-drag.y)*k));
+    drag={x:e.clientX,y:e.clientY}; update();
+  });
+  ['pointerup','pointercancel'].forEach(function(t){el.addEventListener(t,function(){drag=null;});});
+  el.addEventListener('wheel',function(e){e.preventDefault();fov=Math.max(35,Math.min(95,fov+e.deltaY*0.03));update();},{passive:false});
+  window.addEventListener('resize',update);
+  api.update=update;
+  return api;
+})();
+
+// ---------------------------------------------------------------- modello 3D (three.js)
+var three=null;
+function hasWebGL(){
+  try{var c=document.createElement('canvas');return !!(window.WebGLRenderingContext&&(c.getContext('webgl2')||c.getContext('webgl')));}catch(e){return false;}
+}
+function fail(msg){
+  document.getElementById('statusText').textContent=msg;
+  document.querySelector('#status .bar').hidden=true;
+  document.getElementById('status').hidden=false;
+}
+
+function initThree(){
+  if(!window.THREE||!THREE.GLTFLoader||!THREE.OrbitControls){fail('Non riesco a caricare il motore 3D. Controlla la connessione e ricarica la pagina, oppure usa il Tour 360°.');return;}
+  if(!hasWebGL()){fail('Questo dispositivo non supporta la grafica 3D (WebGL). Il Tour 360° e i Render funzionano lo stesso.');return;}
+  if(THREE.ColorManagement) THREE.ColorManagement.legacyMode=false;
+  var canvas=document.getElementById('three');
+  var renderer;
+  try{renderer=new THREE.WebGLRenderer({canvas:canvas,antialias:true,powerPreference:'high-performance'});}
+  catch(e){fail('Non riesco ad avviare la grafica 3D su questo dispositivo. Il Tour 360° e i Render funzionano lo stesso.');return;}
+  var mobile=Math.min(screen.width,screen.height)<700;
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,mobile?1.75:2));
+  renderer.outputEncoding=THREE.sRGBEncoding;
+  renderer.toneMapping=THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure=1.05;
+  renderer.shadowMap.enabled=true;
+  renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+
+  var scene=new THREE.Scene();
+  scene.background=skyTexture();
+  scene.fog=new THREE.Fog(0xdfe4e6,45,140);
+  var camera=new THREE.PerspectiveCamera(50,1,0.05,400);
+
+  // luce: sole da sud-ovest nel pomeriggio (come nei render) + cielo
+  var hemi=new THREE.HemisphereLight(0xe4ecf5,0x8a8570,1.1); scene.add(hemi);
+  var amb=new THREE.AmbientLight(0xffffff,0.25); scene.add(amb);
+  var sun=new THREE.DirectionalLight(0xfff0dc,2.3);
+  var az=235*Math.PI/180, el=32*Math.PI/180;
+  sun.position.set(Math.sin(az)*Math.cos(el)*40, Math.sin(el)*40, -Math.cos(az)*Math.cos(el)*40).add(new THREE.Vector3(2.5,0,11));
+  sun.target.position.set(2.5,0,11);
+  sun.castShadow=true;
+  sun.shadow.mapSize.set(mobile?1024:2048,mobile?1024:2048);
+  var sc=sun.shadow.camera; sc.left=-19;sc.right=19;sc.top=19;sc.bottom=-19;sc.near=5;sc.far=90;
+  sun.shadow.bias=-0.0004; sun.shadow.normalBias=0.02;
+  scene.add(sun); scene.add(sun.target);
+
+  // ---- texture procedurali (in metri: le UV sono coordinate del mondo)
+  function cv(w,h,fn){var c=document.createElement('canvas');c.width=w;c.height=h;fn(c.getContext('2d'),w,h);
+    var t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.encoding=THREE.sRGBEncoding;t.anisotropy=renderer.capabilities.getMaxAnisotropy();return t;}
+  function rnd(seed){return function(){seed=(seed*16807)%2147483647;return (seed-1)/2147483646;};}
+  function planks(c1,c2){ // 8 listoni da 0,19 m × 1,4 m -> canvas = 2,8 × 1,52 m
+    var t=cv(1024,556,function(g,w,h){var r=rnd(7),rows=8,rh=h/rows;
+      for(var i=0;i<rows;i++){var off=(i*0.37%1)*w/2;
+        for(var x=-off;x<w;x+=w/2){var k=r();g.fillStyle=mix(c1,c2,k);g.fillRect(x,i*rh,w/2,rh);
+          for(var j=0;j<14;j++){g.strokeStyle='rgba(60,35,15,'+(0.05+r()*0.08)+')';g.lineWidth=0.6+r()*1.4;var yy=i*rh+r()*rh;
+            g.beginPath();g.moveTo(x,yy);g.bezierCurveTo(x+w/6,yy+(r()-.5)*6,x+w/3,yy+(r()-.5)*6,x+w/2,yy+(r()-.5)*4);g.stroke();}
+          g.fillStyle='rgba(40,25,12,.55)';g.fillRect(x,i*rh,1.2,rh);}
+        g.fillStyle='rgba(40,25,12,.45)';g.fillRect(0,i*rh,w,1.2);}
+    });t.userData={size:[2.8,1.52]};return t;}
+  function tiles(c1,c2,tw,th,joint){
+    var t=cv(1024,Math.round(1024*th/tw),function(g,w,h){var r=rnd(3);
+      for(var y=0;y<2;y++)for(var x=0;x<2;x++){g.fillStyle=mix(c1,c2,r());g.fillRect(x*w/2,y*h/2,w/2,h/2);
+        for(var n=0;n<400;n++){g.fillStyle='rgba(0,0,0,'+r()*0.03+')';g.fillRect(x*w/2+r()*w/2,y*h/2+r()*h/2,2+r()*6,2+r()*6);}}
+      g.fillStyle=joint;for(var i=0;i<=2;i++){g.fillRect(i*w/2-2,0,4,h);g.fillRect(0,i*h/2-2,w,4);}
+    });t.userData={size:[tw*2,th*2]};return t;}
+  function noiseTex(c1,c2,size,dots){
+    var t=cv(512,512,function(g,w,h){var r=rnd(11);g.fillStyle=c1;g.fillRect(0,0,w,h);
+      for(var n=0;n<dots;n++){g.fillStyle=mix(c1,c2,r());g.globalAlpha=0.35+r()*0.5;var s=1+r()*3;g.fillRect(r()*w,r()*h,s,s*(1+r()*3));}g.globalAlpha=1;});
+    t.userData={size:[size,size]};return t;}
+  function mix(a,b,k){var A=hex(a),B=hex(b);return 'rgb('+[0,1,2].map(function(i){return Math.round(A[i]+(B[i]-A[i])*k);}).join(',')+')';}
+  function hex(s){return [1,3,5].map(function(i){return parseInt(s.substr(i,2),16);});}
+
+  var T={
+    oak:planks('#9d7148','#b4875c'),
+    porc:tiles('#c9c3b9','#d2ccc2',1.2,0.6,'rgba(140,132,120,.8)'),
+    bath:tiles('#a9a9a6','#b3b3b0',0.6,0.6,'rgba(90,90,88,.8)'),
+    pave:tiles('#a39d92','#aea79b',0.9,0.45,'rgba(70,68,64,.9)'),
+    drive:tiles('#7d756a','#8b8276',0.3,0.2,'rgba(50,48,44,.9)'),
+    grass:noiseTex('#3a5520','#577330',3,9000)
+  };
+  function M(o){var m=new THREE.MeshStandardMaterial({color:o.c||0xffffff,roughness:o.r==null?0.8:o.r,metalness:o.m||0});
+    if(o.t){m.map=o.t;m.userData.uvSize=o.t.userData.size;m.userData.rot=!!o.rot;}
+    if(o.e){m.emissive=new THREE.Color(o.e);m.emissiveIntensity=o.ei||1;}
+    return m;}
+  var MAT={
+    'Intonaco esterno':M({c:0xe8e5df,r:0.95}),'Copertura':M({c:0xe8e5df,r:0.95}),
+    'Intonaco interno':M({c:0xf1efea,r:0.95}),'Soffitto':M({c:0xf4f3f0,r:0.95}),
+    'Parquet rovere':M({t:T.oak,r:0.55}),'Parquet rovere Y':M({t:T.oak,r:0.55,rot:true}),
+    'Gres 120x60':M({t:T.porc,r:0.35}),'Gres bagno':M({t:T.bath,r:0.4}),
+    'Cemento':M({c:0x8b8b88,r:0.9}),'Soglia pietra':M({c:0xb8b2a8,r:0.6}),'Zoccolo pietra':M({c:0x3b3b3a,r:0.8}),
+    'Pavimentazione esterna':M({t:T.pave,r:0.85}),'Masselli vialetto':M({t:T.drive,r:0.9}),
+    'Alluminio antracite':M({c:0x2a2c2f,r:0.45,m:0.4}),'Portone garage':M({c:0x2c2e31,r:0.5,m:0.3}),
+    'Portoncino noce':M({c:0x5a3b25,r:0.5}),'Noce':M({c:0x5e3f27,r:0.5}),'Rovere mobili':M({c:0xa37b52,r:0.55}),
+    'Laccato greige':M({c:0xc8c1b6,r:0.4}),'Laccato bianco':M({c:0xecebe7,r:0.35}),
+    'Top gres scuro':M({c:0x1c1c1c,r:0.3}),'Ceramica':M({c:0xf6f6f4,r:0.15}),
+    'Acciaio':M({c:0xc9cbcd,r:0.3,m:1}),'Vetro nero':M({c:0x0b0b0b,r:0.1}),'Nero opaco':M({c:0x1b1b1b,r:0.7}),
+    'Specchio':M({c:0xdde3e6,r:0.02,m:1}),'Tessuto divano':M({c:0xa89480,r:1}),'Tessuto cuscini':M({c:0x8a7766,r:1}),
+    'Lino letto':M({c:0xdcd8cf,r:1}),'Tappeto':M({c:0xbdb6a9,r:1}),'Tessuto sedie':M({c:0x5e544a,r:1}),
+    'Paralume':M({c:0x1e1e1e,r:0.4,m:0.5}),'Luce calda':M({c:0xffe2c0,e:0xffd4a0,ei:1.4}),'Striscia LED':M({c:0xffe2c0,e:0xffd4a0,ei:1.6})
+  };
+  var glass=new THREE.MeshPhysicalMaterial({color:0xcfe3e8,roughness:0.05,metalness:0,transparent:true,opacity:0.22,depthWrite:false});
+  MAT['Vetro']=glass;
+  var leaf=M({c:0x4a6b2c,r:0.9}), hedgeM=M({c:0x3d5a26,r:0.95}), bark=M({c:0x4a3a2c,r:0.9});
+
+  // UV planari in metri per i materiali con texture
+  function worldUV(mesh,mat){
+    var g=mesh.geometry, p=g.attributes.position, n=g.attributes.normal, s=mat.userData.uvSize, rot=mat.userData.rot;
+    var uv=new Float32Array(p.count*2), v=new THREE.Vector3();
+    for(var i=0;i<p.count;i++){
+      v.fromBufferAttribute(p,i).applyMatrix4(mesh.matrixWorld);
+      var ax=Math.abs(n.getX(i)),ay=Math.abs(n.getY(i)),a,b;
+      if(ay>=ax&&ay>=Math.abs(n.getZ(i))){a=v.x;b=v.z;}else if(ax>=Math.abs(n.getZ(i))){a=v.z;b=v.y;}else{a=v.x;b=v.y;}
+      if(rot){var tmp=a;a=b;b=tmp;}
+      uv[i*2]=a/s[0]; uv[i*2+1]=b/s[1];
+    }
+    g.setAttribute('uv',new THREE.BufferAttribute(uv,2));
+  }
+
+  var roofParts=[], floors=[];
+  var bar=document.getElementById('bar');
+  new THREE.GLTFLoader().load('casa.glb',function(gltf){
+    var root=gltf.scene; root.updateMatrixWorld(true);
+    root.traverse(function(o){
+      if(!o.isMesh) return;
+      var name=o.material&&o.material.name, m=MAT[name]||M({c:0xcccccc});
+      o.material=m;
+      if(m.userData.uvSize) worldUV(o,m);
+      o.castShadow=(name!=='Vetro'&&name!=='Luce calda'&&name!=='Striscia LED');
+      o.receiveShadow=true;
+      if(name==='Copertura'||name==='Soffitto') roofParts.push(o);
+      if(/Parquet|Gres|Cemento|Pavimentazione|Masselli|Soglia/.test(name)) floors.push(o);
+    });
+    scene.add(root);
+    addGarden();
+    document.getElementById('status').hidden=true;
+    setView('esterno',true);
+  },function(x){ if(x.total) bar.style.width=(100*x.loaded/x.total)+'%'; },
+  function(){fail('Il file del modello non si è caricato. Ricarica la pagina.');});
+
+  // ---- giardino: prato, siepi e alberi semplificati (quelli dei render hanno foglie vere)
+  function addGarden(){
+    var g=new THREE.Mesh(new THREE.PlaneGeometry(300,300),M({t:T.grass,r:1}));
+    g.rotation.x=-Math.PI/2; g.position.set(2.5,-0.135,10); g.receiveShadow=true;
+    var uv=g.geometry.attributes.uv; for(var i=0;i<uv.count;i++){uv.setXY(i,uv.getX(i)*100,uv.getY(i)*100);}
+    scene.add(g); floors.push(g);
+    [[-4.4,-3.9,-4.0,18.0],[9.2,9.7,-4.0,22.95],[-4.4,9.7,-4.0,-3.5]].forEach(function(b){
+      var h=new THREE.Mesh(new THREE.BoxGeometry(b[1]-b[0],1.7,b[3]-b[2]),hedgeM);
+      h.position.set((b[0]+b[1])/2,-0.12+0.85,(b[2]+b[3])/2); h.castShadow=h.receiveShadow=true; scene.add(h);
+    });
+    var trees=[[0.2,20.8,4.6,1.6],[12.5,8,6,2.4],[-8,3,6.5,2.6],[-9.5,14,7,2.8],[15,18,6.5,2.5],[18,-2,8,3],[-6,-9,7.5,3],[6,-10,7,2.8],[-14,26,6,2.6]];
+    var r=rnd(5);
+    trees.forEach(function(t){
+      var zc=t[2]-t[3]*0.8;
+      var tr=new THREE.Mesh(new THREE.CylinderGeometry(0.07,0.14,zc,10),bark);
+      tr.position.set(t[0],-0.12+zc/2,t[1]); tr.castShadow=true; scene.add(tr);
+      for(var k=0;k<5;k++){
+        var rr=t[3]*(k?0.55+r()*0.15:0.8), a=r()*6.28, off=k?t[3]*0.45:0;
+        var c=new THREE.Mesh(new THREE.IcosahedronGeometry(rr,2),leaf);
+        c.scale.y=0.8; c.position.set(t[0]+Math.cos(a)*off,-0.12+zc+(r()-.4)*t[3]*0.5,t[1]+Math.sin(a)*off);
+        c.castShadow=c.receiveShadow=true; scene.add(c);
+      }
+    });
+  }
+
+  // ---- comandi: orbita e passeggiata
+  var orbit=new THREE.OrbitControls(camera,canvas);
+  orbit.enableDamping=true; orbit.dampingFactor=0.08; orbit.maxPolarAngle=Math.PI*0.495; orbit.minDistance=1.5; orbit.maxDistance=80;
+  orbit.addEventListener('change',function(){dirty=true;});
+  var mode='orbit', walk={yaw:0,pitch:0,eye:1.6}, tween=null, dirty=true;
+  var roofOn=true, labelsOn=true;
+
+  function setRoof(on){roofOn=on;roofParts.forEach(function(o){o.visible=on;});document.getElementById('tRoof').classList.toggle('on',on);dirty=true;}
+  function setMode(m){
+    mode=m; orbit.enabled=(m==='orbit');
+    document.getElementById('tWalk').classList.toggle('on',m==='walk');
+    document.getElementById('hint').textContent=m==='walk'
+      ?'Trascina per guardarti intorno · tocca il pavimento per camminare · tasti W A S D'
+      :'Trascina per ruotare · pizzica o rotella per zoomare · due dita per spostare';
+    if(m==='orbit') document.getElementById('roomInfo').hidden=true;
+    dirty=true;
+  }
+  function lookFromYaw(){var cp=Math.cos(walk.pitch);return new THREE.Vector3(camera.position.x+Math.sin(walk.yaw)*cp,camera.position.y+Math.sin(walk.pitch),camera.position.z-Math.cos(walk.yaw)*cp);}
+  function setView(id,instant){
+    var v=VIEWS[id];
+    [].forEach.call(document.getElementById('views').children,function(b){b.classList.toggle('on',b.dataset.id===id);});
+    if(v.orbit){
+      setMode('orbit'); setRoof(v.roof);
+      animateTo(new THREE.Vector3().fromArray(v.pos),new THREE.Vector3().fromArray(v.target),instant);
+    }else{
+      setRoof(true); setMode('walk');
+      walk.eye=v.eye||1.6;
+      var p=new THREE.Vector3(v.pos[0],walk.eye,v.pos[1]);
+      walk.yaw=Math.atan2(v.look[0]-v.pos[0],-(v.look[1]-v.pos[1])); walk.pitch=-0.05;
+      animateTo(p,null,instant);
+      var info=document.getElementById('roomInfo');
+      if(v.room!=null){info.hidden=false;document.getElementById('roomName').textContent=ROOMS[v.room][0];document.getElementById('roomDim').textContent=ROOMS[v.room][3];}
+      else info.hidden=true;
+    }
+  }
+  function animateTo(pos,target,instant){
+    var p0=camera.position.clone(), t0=orbit.target.clone(), s=performance.now(), dur=instant?0:900;
+    tween=function(now){
+      var k=dur?Math.min(1,(now-s)/dur):1; k=k*k*(3-2*k);
+      camera.position.lerpVectors(p0,pos,k);
+      if(target){orbit.target.lerpVectors(t0,target,k);camera.lookAt(orbit.target);}
+      else camera.lookAt(lookFromYaw());
+      if(k>=1){tween=null; if(target) orbit.update();}
+      dirty=true;
+    };
+  }
+
+  var vb=document.getElementById('views');
+  Object.keys(VIEWS).forEach(function(id){
+    var b=document.createElement('button');b.className='chip';b.textContent=VIEWS[id].label;b.dataset.id=id;
+    b.onclick=function(){setView(id);};vb.appendChild(b);
+  });
+  document.getElementById('tRoof').onclick=function(){setRoof(!roofOn);};
+  document.getElementById('tLabels').onclick=function(){labelsOn=!labelsOn;this.classList.toggle('on',labelsOn);dirty=true;};
+  document.getElementById('tWalk').onclick=function(){
+    if(mode==='walk'){ setMode('orbit'); setView('esterno'); }
+    else setView('soggiorno');
+  };
+
+  // passeggiata: trascina = guarda, tocco sul pavimento = cammina
+  var ray=new THREE.Raycaster(), ptr=null, keys={};
+  canvas.addEventListener('pointerdown',function(e){ if(mode!=='walk') return; ptr={x:e.clientX,y:e.clientY,sx:e.clientX,sy:e.clientY}; try{canvas.setPointerCapture(e.pointerId);}catch(_){} });
+  canvas.addEventListener('pointermove',function(e){
+    if(mode!=='walk'||!ptr) return;
+    var k=camera.fov*Math.PI/180/canvas.clientHeight;
+    walk.yaw-=(e.clientX-ptr.x)*k*1.1; walk.pitch=Math.max(-1.2,Math.min(1.2,walk.pitch+(e.clientY-ptr.y)*k*1.1));
+    ptr.x=e.clientX; ptr.y=e.clientY; camera.lookAt(lookFromYaw()); dirty=true;
+  });
+  canvas.addEventListener('pointerup',function(e){
+    if(mode!=='walk'||!ptr) return;
+    var moved=Math.hypot(e.clientX-ptr.sx,e.clientY-ptr.sy); ptr=null;
+    if(moved>6) return;
+    var r=canvas.getBoundingClientRect();
+    ray.setFromCamera({x:(e.clientX-r.left)/r.width*2-1,y:-(e.clientY-r.top)/r.height*2+1},camera);
+    var hit=ray.intersectObjects(scene.children,true).filter(function(h){return h.object.visible&&h.object.material!==glass;})[0];
+    if(!hit||floors.indexOf(hit.object)<0||hit.face.normal.y<0.5) return;
+    var d=hit.point.clone(); d.y=walk.eye+(hit.point.y<-0.05?-0.12:0);
+    animateTo(d,null,false);
+  });
+  canvas.addEventListener('wheel',function(e){ if(mode!=='walk') return; e.preventDefault(); camera.fov=Math.max(40,Math.min(90,camera.fov+e.deltaY*0.03)); camera.updateProjectionMatrix(); dirty=true; },{passive:false});
+  window.addEventListener('keydown',function(e){keys[e.key.toLowerCase()]=true;});
+  window.addEventListener('keyup',function(e){keys[e.key.toLowerCase()]=false;});
+
+  // etichette dei vani (visibili dall'alto)
+  var lblBox=document.getElementById('labels');
+  var lbls=ROOMS.map(function(r){var d=document.createElement('div');d.className='lbl';d.innerHTML='<b>'+r[0]+'</b><span>'+r[3]+'</span>';lblBox.appendChild(d);return {el:d,p:new THREE.Vector3(r[1],1.2,r[2])};});
+  var tmp=new THREE.Vector3();
+  function placeLabels(){
+    var show=labelsOn&&mode==='orbit'&&!roofOn, w=canvas.clientWidth, h=canvas.clientHeight;
+    lbls.forEach(function(l){
+      if(!show){l.el.hidden=true;return;}
+      tmp.copy(l.p).project(camera);
+      var vis=tmp.z<1&&Math.abs(tmp.x)<1.1&&Math.abs(tmp.y)<1.1;
+      l.el.hidden=!vis; if(vis){l.el.style.left=((tmp.x+1)/2*w)+'px';l.el.style.top=((1-tmp.y)/2*h)+'px';}
+    });
+  }
+
+  function resize(){
+    var w=canvas.clientWidth,h=canvas.clientHeight; if(!w||!h) return;
+    renderer.setSize(w,h,false); camera.aspect=w/h; camera.fov=w<h?68:50; camera.updateProjectionMatrix(); dirty=true;
+  }
+  window.addEventListener('resize',resize); resize();
+
+  var last=performance.now();
+  function loop(now){
+    requestAnimationFrame(loop);
+    var dt=Math.min(0.05,(now-last)/1000); last=now;
+    if(current!=='v3d') return;
+    if(tween) tween(now);
+    if(mode==='orbit'&&!tween) orbit.update();
+    if(mode==='walk'&&!tween){
+      var f=(keys.w||keys.arrowup?1:0)-(keys.s||keys.arrowdown?1:0), s=(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0);
+      if(f||s){camera.position.x+=(Math.sin(walk.yaw)*f+Math.cos(walk.yaw)*s)*dt*1.6;camera.position.z+=(-Math.cos(walk.yaw)*f+Math.sin(walk.yaw)*s)*dt*1.6;camera.lookAt(lookFromYaw());dirty=true;}
+    }
+    if(dirty){dirty=false;renderer.render(scene,camera);placeLabels();}
+  }
+  requestAnimationFrame(loop);
+
+  // cielo: gradiente
+  function skyTexture(){
+    var c=document.createElement('canvas');c.width=4;c.height=256;var g=c.getContext('2d');
+    var gr=g.createLinearGradient(0,0,0,256);gr.addColorStop(0,'#8fb3d9');gr.addColorStop(0.55,'#cfdeea');gr.addColorStop(1,'#eef1ee');
+    g.fillStyle=gr;g.fillRect(0,0,4,256);var t=new THREE.CanvasTexture(c);t.encoding=THREE.sRGBEncoding;return t;
+  }
+  return {resize:resize};
+}
+
+three=initThree()||null;
+var saved=null; try{saved=localStorage.getItem('casa-tab');}catch(e){}
+if(!three&&!saved) show('v360'); else if(saved&&saved!=='v3d') show(saved);
+})();
+</script>

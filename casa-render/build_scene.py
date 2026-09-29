@@ -428,6 +428,7 @@ def mat_garage_door(name):
 def build_materials():
     M = {}
     M["plaster_ext"] = mat_plaster("Intonaco esterno", (0.80, 0.78, 0.74), (0.86, 0.84, 0.80), 0.12)
+    M["roof"] = mat_plaster("Copertura", (0.80, 0.78, 0.74), (0.86, 0.84, 0.80), 0.12)
     M["plaster_int"] = mat_plaster("Intonaco interno", (0.85, 0.84, 0.81), (0.88, 0.87, 0.84), 0.03)
     M["ceiling"] = mat_plaster("Soffitto", (0.86, 0.86, 0.85), (0.88, 0.88, 0.87), 0.01)
     M["oak"] = mat_planks("Parquet rovere", (0.42, 0.29, 0.17), (0.50, 0.36, 0.22))
@@ -642,10 +643,10 @@ def add_floors():
     roof = [(-0.0 - o, 7.1 + o, 0.0 - o, 5.5), (-0.0 - o, 8.7 + o, 5.5, 11.15),
             (4.0 - o, 8.7 + o, 11.15, 18.75 + o), (-3.8 - o, 0.0 - o, 5.25 - o, 11.15 + o)]
     for x0, x1, y0, y1 in roof:
-        box("plaster_ext", x0, x1, y0, y1, H + 0.02, H + 0.30)
+        box("roof", x0, x1, y0, y1, H + 0.02, H + 0.30)
     # risvolto della cornice sul fronte sud del blocco notte (tra garage e cucina)
-    box("plaster_ext", -0.35, 4.0 - o, 11.15, 11.15 + o, H + 0.02, H + 0.30)
-    box("plaster_ext", -3.8 - o, -0.35, 5.25 - o, 5.25, H + 0.02, H + 0.30)
+    box("roof", -0.35, 4.0 - o, 11.15, 11.15 + o, H + 0.02, H + 0.30)
+    box("roof", -3.8 - o, -0.35, 5.25 - o, 5.25, H + 0.02, H + 0.30)
 
 
 def _leaf_tex(seed):
@@ -1265,6 +1266,63 @@ def build():
         add_camera(n, p, t, lens)
 
 
+NO_EXPORT = {"Foglie", "Siepe", "Siepe fitta", "Corteccia", "Prato", "Erba"}
+
+
+def export_glb(path):
+    bpy.ops.object.select_all(action="DESELECT")
+    for ob in bpy.context.scene.objects:
+        if ob.type != "MESH":
+            continue
+        mats = {m.name for m in ob.data.materials if m}
+        if mats & NO_EXPORT:
+            continue
+        ob.select_set(True)
+    bpy.ops.export_scene.gltf(filepath=os.path.abspath(path), export_format="GLB", use_selection=True,
+                              export_apply=True, export_materials="EXPORT", export_lights=False,
+                              export_cameras=False, export_normals=True, export_texcoords=False)
+
+
+PANOS = {
+    # nome: (x, y, z) in pianta
+    "soggiorno": (5.6, 13.55, 1.55),
+    "cucina": (7.15, 16.75, 1.55),
+    "camera": (2.75, 10.1, 1.55),
+    "giardino": (1.1, 17.4, 1.55),
+}
+# facce del cubo: (nome, direzione, "alto" dell'immagine) in coordinate Blender
+FACES = [("n", (0, 1, 0), (0, 0, 1)), ("e", (1, 0, 0), (0, 0, 1)), ("s", (0, -1, 0), (0, 0, 1)),
+         ("w", (-1, 0, 0), (0, 0, 1)), ("u", (0, 0, 1), (0, -1, 0)), ("d", (0, 0, -1), (0, 1, 0))]
+
+
+def render_panos(names, size, samples, out):
+    from mathutils import Matrix
+    sc = bpy.context.scene
+    sc.render.resolution_x = sc.render.resolution_y = size
+    sc.cycles.samples = samples
+    sc.render.image_settings.quality = 86
+    cam = bpy.data.cameras.new("pano")
+    cam.lens_unit = "FOV"
+    cam.angle = math.radians(90)
+    cam.sensor_fit = "HORIZONTAL"
+    cam.clip_start = 0.05
+    ob = link(bpy.data.objects.new("pano", cam))
+    sc.camera = ob
+    os.makedirs(out, exist_ok=True)
+    for n in names:
+        x, y, z = PANOS[n]
+        ob.location = (x, -y, z)
+        sc.view_settings.exposure = -0.25 if n == "giardino" else 1.5
+        for f, d, u in FACES:
+            fw, up = Vector(d), Vector(u)
+            right = fw.cross(up)
+            ob.rotation_mode = "QUATERNION"
+            ob.rotation_quaternion = Matrix((right, up, -fw)).transposed().to_quaternion()
+            sc.render.filepath = os.path.abspath(os.path.join(out, f"{n}_{f}.jpg"))
+            bpy.ops.render.render(write_still=True)
+            print("RENDERED", sc.render.filepath, flush=True)
+
+
 def main():
     argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else sys.argv[1:]
     ap = argparse.ArgumentParser()
@@ -1273,11 +1331,19 @@ def main():
     ap.add_argument("--samples", type=int, default=64)
     ap.add_argument("--out", default="renders")
     ap.add_argument("--save", default="")
+    ap.add_argument("--glb", default="")
+    ap.add_argument("--panos", default="")
+    ap.add_argument("--pano-size", type=int, default=768)
     a = ap.parse_args(argv)
     build()
     setup_render(a.res, a.samples)
     if a.save:
         bpy.ops.wm.save_as_mainfile(filepath=os.path.abspath(a.save))
+    if a.glb:
+        export_glb(a.glb)
+    if a.panos:
+        render_panos([p for p in a.panos.split(",") if p], a.pano_size, a.samples, a.out)
+        return
     os.makedirs(a.out, exist_ok=True)
     for n in [c for c in a.cams.split(",") if c]:
         sc = bpy.context.scene
