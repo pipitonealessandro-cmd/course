@@ -404,7 +404,29 @@ function initThree(){
 
   var roofParts=[], floors=[];
   var bar=document.getElementById('bar');
-  new THREE.GLTFLoader().load('casa.json',function(gltf){
+  // Il modello è un glTF con il buffer in base64. La pagina pubblicata non può fare fetch di URI data:,
+  // quindi ricostruisco in memoria un GLB (JSON + binario) e lo passo al parser, senza richieste extra.
+  function toGLB(json){
+    var uri=json.buffers[0].uri, b64=uri.slice(uri.indexOf(',')+1), bin=atob(b64), n=bin.length;
+    var body=new Uint8Array((n+3)&~3); for(var i=0;i<n;i++) body[i]=bin.charCodeAt(i);
+    delete json.buffers[0].uri;
+    var js=new TextEncoder().encode(JSON.stringify(json)), jl=(js.length+3)&~3;
+    var out=new ArrayBuffer(12+8+jl+8+body.length), dv=new DataView(out), u8=new Uint8Array(out);
+    dv.setUint32(0,0x46546C67,true); dv.setUint32(4,2,true); dv.setUint32(8,out.byteLength,true);
+    dv.setUint32(12,jl,true); dv.setUint32(16,0x4E4F534A,true); u8.fill(0x20,20,20+jl); u8.set(js,20);
+    var o=20+jl; dv.setUint32(o,body.length,true); dv.setUint32(o+4,0x004E4942,true); u8.set(body,o+8);
+    return out;
+  }
+  function loadModel(onLoad,onErr){
+    var xhr=new XMLHttpRequest(); xhr.open('GET','casa.json'); xhr.responseType='json';
+    xhr.onprogress=function(x){ if(x.total) bar.style.width=(90*x.loaded/x.total)+'%'; };
+    xhr.onload=function(){
+      if(xhr.status&&xhr.status!==200||!xhr.response){onErr();return;}
+      try{ new THREE.GLTFLoader().parse(toGLB(xhr.response),'',onLoad,onErr); }catch(e){ onErr(e); }
+    };
+    xhr.onerror=onErr; xhr.send();
+  }
+  loadModel(function(gltf){
     var root=gltf.scene; root.updateMatrixWorld(true);
     root.traverse(function(o){
       if(!o.isMesh) return;
@@ -420,8 +442,7 @@ function initThree(){
     addGarden();
     document.getElementById('status').hidden=true;
     setView('esterno',true);
-  },function(x){ if(x.total) bar.style.width=(100*x.loaded/x.total)+'%'; },
-  function(){fail('Il file del modello non si è caricato. Ricarica la pagina.');});
+  },function(){fail('Il modello non si è caricato. Ricarica la pagina; se il problema resta, usa il Tour 360°.');});
 
   // ---- giardino: prato, siepi e alberi semplificati (quelli dei render hanno foglie vere)
   function addGarden(){
