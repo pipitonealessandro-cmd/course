@@ -83,3 +83,18 @@ modello e per non riproporre opzioni già scartate.
   della finestra cucina, l'apertura cucina/soggiorno a 1,80 m, lo
   spessore del muro sopra doccia/ripostiglio). Continuare a essere
   precisi con le quote è importante per lui.
+
+## Sessione Claude Code (render fotorealistici e visore)
+
+- L'utente ha **confermato tutte le assunzioni** su misure non quotate: larghezze stimate di
+  ripostiglio/studio/lavanderia, pilastro 25x45, finestre (davanzale 0,90-1,10, sommità 2,00-2,40),
+  portone garage 2,80 x 2,40, porte interne 0,90 x 2,10, altezza 2,70, **tetto piano** con cornice
+  sottile, dislivello giardino ~12 cm, muri di confine 1,20 m su strada e 1,80 m sugli altri lati,
+  cancello carrabile da 3 m davanti al garage, cancelletto pedonale a 7,2 m dal muro sinistro.
+- **Cucina, angolo pranzo (proposta 1 scelta dall'utente):** divanetto a panca 140 x 70 cm contro il
+  muro ovest della piantina (tra l'angolo della vetrata telescopica e la porta finestra, 1,50 m di
+  muro libero), tavolo 140 x 85 ruotato con il lato lungo davanti al divanetto, 2 sedie (una sul lato
+  verso i mobili, una a capotavola), TV 32" su braccio orientabile sul muretto accanto alla vetrata.
+  Scartata la proposta 2 (TV 43" con divanetto di fronte) perché toglieva il tavolo da 4.
+- Render e visore: `casa-render/` nel repository (script Blender/Cycles `build_scene.py`, pagina
+  `viewer/index.html` con modello 3D, tour 360 e galleria).

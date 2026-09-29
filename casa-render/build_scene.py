@@ -933,7 +933,7 @@ def cabinets(x0, x1, y0, y1, z0, z1, axis, n, mat="lacquer", body_mat="lacquer",
 
 
 def chair(x, y, facing):
-    """Sedia imbottita con gambe in legno; facing = 'N' o 'S' (verso dove guarda chi siede)."""
+    """Sedia imbottita con gambe in legno; facing = N/S/E/W della piantina (verso dove guarda chi siede)."""
     w = 0.44
     for dx in (0.03, w - 0.06):
         for dy in (0.03, w - 0.06):
@@ -941,8 +941,12 @@ def chair(x, y, facing):
     box("chair", x, x + w, y, y + w, 0.44, 0.50, bevel=0.015)
     if facing == "S":
         box("chair", x + 0.01, x + w - 0.01, y, y + 0.05, 0.50, 0.86, bevel=0.015)
-    else:
+    elif facing == "N":
         box("chair", x + 0.01, x + w - 0.01, y + w - 0.05, y + w, 0.50, 0.86, bevel=0.015)
+    elif facing == "W":
+        box("chair", x + w - 0.05, x + w, y + 0.01, y + w - 0.01, 0.50, 0.86, bevel=0.015)
+    else:
+        box("chair", x, x + 0.05, y + 0.01, y + w - 0.01, 0.50, 0.86, bevel=0.015)
 
 
 def pendant(x, y, z_bottom=1.55):
@@ -1018,16 +1022,26 @@ def add_furniture():
     cabinets(8.10, 8.45, 17.55, 18.45, 1.45, 2.20, "y", 1, plinth=0)
     box("steel", 8.05, 8.45, 16.85, 17.50, 1.62, 1.70, bevel=0.003)            # cappa sottopensile
     box("led", 8.11, 8.13, 15.46, 16.79, 1.44, 1.45)
-    # tavolo e sedie
-    B("walnut", 5.10, 15.60, 1.40, 0.85, 0.04, 0.72, bevel=0.004)
-    for lx, ly in ((5.16, 15.66), (6.44, 15.66), (5.16, 16.39), (6.44, 16.39)):
+    # angolo pranzo (proposta 1): divanetto a panca sul muro ovest tra la vetrata e la porta finestra
+    # (1,50 m di muro libero), tavolo 140 x 85 ruotato davanti, 2 sedie, TV 32" su braccio.
+    # Passaggio dall'apertura di 1,80 m: libero tra y 14,55 e 15,55 davanti alla colonna frigo.
+    box("black_matte", 4.27, 4.93, 14.62, 15.98, 0.0, 0.06)                     # zoccolo
+    box("sofa", 4.25, 4.95, 14.60, 16.00, 0.06, 0.34, bevel=0.02)                # base
+    box("sofa", 4.40, 4.97, 14.62, 15.98, 0.34, 0.45, bevel=0.035)               # seduta
+    box("sofa", 4.25, 4.42, 14.60, 16.00, 0.34, 0.90, bevel=0.035)               # schienale
+    for i, yy in enumerate((14.66, 15.32)):                                      # cuscini
+        box("sofa2", 4.40, 4.56, yy, yy + 0.62, 0.45, 0.82, bevel=0.06)
+    box("walnut", 5.05, 5.90, 14.70, 16.10, 0.72, 0.76, bevel=0.004)             # tavolo 140 x 85
+    for lx, ly in ((5.11, 14.76), (5.80, 14.76), (5.11, 16.00), (5.80, 16.00)):
         B("black_matte", lx, ly, 0.04, 0.04, 0.72)
-    chair(5.30, 15.10, "S")
-    chair(6.00, 15.10, "S")
-    chair(5.30, 16.55, "N")
-    chair(6.00, 16.55, "N")
-    pendant(5.50, 16.02)
-    pendant(6.30, 16.02)
+    chair(6.00, 15.55, "W")                                                      # lato est
+    chair(5.26, 16.22, "N")                                                      # capotavola
+    pendant(5.48, 15.05)
+    pendant(5.48, 15.78)
+    # TV 32" (0,73 x 0,43 m) su braccio orientabile, sul muretto accanto alla vetrata
+    box("black_matte", 4.98, 5.14, 14.55, 14.57, 1.25, 1.45)                     # piastra a muro
+    box("black_matte", 5.04, 5.08, 14.57, 14.66, 1.33, 1.37)                     # braccio
+    box("tv", 4.70, 5.43, 14.66, 14.70, 1.15, 1.58, bevel=0.003)
 
     # --- soggiorno: parete attrezzata sul muro della lavanderia
     B("walnut", 5.75, 9.45, 2.7, 0.45, 0.45, 0.05, bevel=0.004)
@@ -1220,8 +1234,8 @@ CAMERAS = {
     "ext_aerea": ((-11.5, 30.5, 12.5), (3.0, 10.0, 0.5), 28, -0.25),
     "int_soggiorno": ((4.75, 14.15, 1.45), (7.6, 9.9, 1.05), 17, 1.7),
     "int_divano": ((5.15, 9.95, 1.35), (7.3, 13.9, 0.95), 16, 1.7),
-    "int_cucina": ((4.65, 14.95, 1.5), (7.9, 18.1, 0.95), 16, 1.5),
-    "int_cucina2": ((7.55, 17.6, 1.6), (5.0, 12.4, 1.1), 16, 1.5),
+    "int_cucina": ((7.45, 17.45, 1.5), (4.5, 15.0, 1.0), 16, 1.5),
+    "int_cucina2": ((4.6, 17.9, 1.55), (7.2, 14.6, 1.0), 16, 1.5),
 }
 
 
