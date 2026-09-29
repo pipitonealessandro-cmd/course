@@ -5,7 +5,8 @@ Uso:
   python build_scene.py --cams ext_ingresso,int_soggiorno --res 1920 --samples 256 --out renders
   python build_scene.py --save casa.blend        (solo scena, nessun render)
 
-Coordinate di pianta come nel modello HTML: x verso est, y verso sud, in metri.
+Coordinate di pianta come nel modello HTML, in metri: x verso destra della piantina, y verso il basso.
+Orientamento reale (dato da Alex): destra della piantina = NORD, basso = EST, sinistra = SUD, alto = OVEST.
 In Blender: X = x, Y = -y, Z = altezza.
 """
 import argparse
@@ -833,46 +834,66 @@ def lawn(rects, per_m2=3200, length=0.042):
     st.use_close_tip = True
 
 
+# Lotto (misure date da Alex): 25 x 12,5 m. Filo interno dei muri di confine:
+#   sud y = 21,20 (cucina -> muro 2,45 m; garage -> muro 10 m)
+#   nord y = -3,10 (ripostiglio -> muro 3,2 m; porta finestra bagno grande -> muro 8,6 m)
+#   ovest x = -3,80 ed est x = 8,70: la casa è larga 12,5 m e tocca i due confini laterali
+#   cancelletto pedonale a 7,2 m dal muro sinistro (x = 3,40)
+LOT = (-3.8, 8.7, -3.1, 21.2)
+WALL_T = 0.25
+
+
 def add_exterior(M):
-    # terreno oltre il lotto e prato del lotto
+    x0, x1, y0, y1 = LOT
+    t = WALL_T
+    # terreno oltre il lotto
     box("grass", -60, 70, -60, 80, GROUND - 0.3, GROUND - 0.02)
-    stones = [22.4, 21.5, 20.6, 19.7, 18.8, 17.9, 17.0, 16.1, 15.2, 14.3]
-    gaps = [(1.9, 2.8, a + 0.35, b - 0.35) for b, a in zip(stones[:-1], stones[1:])]
-    lawn(gaps + [(-0.3, 1.9, 12.35, 22.95), (2.8, 2.9, 12.35, 22.95), (1.9, 2.8, 12.35, 13.95), (1.9, 2.8, 22.75, 22.95), (2.9, 9.2, 19.85, 22.95), (8.7, 9.2, 5.5, 19.85),
-          (-3.9, 9.2, -3.5, 0.0), (-3.9, 0.0, 0.0, 5.25), (7.1, 9.2, 0.0, 5.5)])
+    # prato del lotto (con fili d'erba)
+    lawn([(-0.3, 2.9, 12.35, y1), (2.9, 3.4, 19.85, y1), (4.4, x1, 19.85, y1),
+          (x0, x1, y0, -1.0), (x0, 2.8, -1.0, 0.0), (4.2, x1, -1.0, 0.0),
+          (x0, 0.0, 0.0, 4.25), (x0, -1.9, 4.25, 5.25), (-0.5, 0.0, 4.25, 5.25),
+          (7.1, x1, 0.0, 4.5)])
     # marciapiede perimetrale e piazzale
     box("paving", -3.8, 4.0, 11.15, 12.35, GROUND - 0.02, GROUND + 0.02)      # fronte garage/camera
     box("paving", 2.9, 4.0, 12.35, 18.75, GROUND - 0.02, GROUND + 0.02)       # lungo la facciata d'ingresso
     box("paving", 2.9, 8.7, 18.75, 19.85, GROUND - 0.02, GROUND + 0.02)       # fronte cucina
-    box("drive", -3.8, -0.3, 12.35, 23.2, GROUND - 0.02, GROUND + 0.015)      # passo carrabile
-    # vialetto pedonale a lastre dal cancello al portoncino
-    for i, yy in enumerate([22.4, 21.5, 20.6, 19.7, 18.8, 17.9, 17.0, 16.1, 15.2, 14.3]):
-        box("paving", 1.9, 2.8, yy - 0.35, yy + 0.35, GROUND - 0.02, GROUND + 0.045, bevel=0.01)
-    box("paving", 2.8, 2.9, 12.8, 13.4, GROUND - 0.02, GROUND + 0.02)
-    # recinzione: muretto su strada (sud) con cancello, siepi sugli altri lati
-    box("plaster_ext", -4.3, -4.0, 18.0, 23.2, GROUND, GROUND + 1.2)
-    box("plaster_ext", -0.1, 1.7, 22.95, 23.2, GROUND, GROUND + 1.2)
-    box("plaster_ext", 3.0, 9.6, 22.95, 23.2, GROUND, GROUND + 1.2)
-    box("threshold", -0.12, 1.72, 22.92, 23.23, GROUND + 1.2, GROUND + 1.24)
-    box("threshold", 2.98, 9.62, 22.92, 23.23, GROUND + 1.2, GROUND + 1.24)
-    # cancello carrabile e pedonale a doghe verticali
-    for gx0, gx1 in ((-4.0, -0.1), (1.7, 3.0)):
-        box("frame", gx0, gx1, 23.02, 23.10, GROUND + 0.05, GROUND + 0.1)
-        box("frame", gx0, gx1, 23.02, 23.10, GROUND + 1.35, GROUND + 1.4)
+    box("paving", 3.4, 4.4, 19.85, y1, GROUND - 0.02, GROUND + 0.02)          # dal cancelletto
+    box("drive", -3.8, -0.3, 12.35, y1, GROUND - 0.02, GROUND + 0.015)        # passo carrabile
+    box("paving", 2.8, 4.2, -1.0, 0.0, GROUND - 0.02, GROUND + 0.02)          # uscita sul retro (disimpegno)
+    box("paving", 7.1, 8.7, 4.5, 5.5, GROUND - 0.02, GROUND + 0.02)           # porta finestra bagno grande
+    box("paving", -1.9, -0.5, 4.25, 5.25, GROUND - 0.02, GROUND + 0.02)       # porta posteriore garage
+    # muri di confine: su strada (sud) h 1,20 con cancelli, laterali e retro h 1,80
+    hs, hb = 1.2, 1.8
+    gates = ((-3.6, -0.6), (3.4, 4.4))            # carrabile davanti al garage, pedonale a 7,2 m dal muro sinistro
+    segs = [(x0 - t, gates[0][0]), (gates[0][1], gates[1][0]), (gates[1][1], x1 + t)]
+    for a_, b_ in segs:
+        box("plaster_ext", a_, b_, y1, y1 + t, GROUND, GROUND + hs)
+        box("threshold", a_ - 0.02, b_ + 0.02, y1 - 0.02, y1 + t + 0.02, GROUND + hs, GROUND + hs + 0.04)
+    box("plaster_ext", x0 - t, x1 + t, y0 - t, y0, GROUND, GROUND + hb)                   # retro
+    box("plaster_ext", x0 - t, x0, y0, y1, GROUND, GROUND + hb)                           # sinistro (ovest)
+    box("plaster_ext", x1, x1 + t, y0, y1, GROUND, GROUND + hb)                           # destro (est)
+    for xa, xb in ((x0 - t, x0), (x1, x1 + t)):
+        box("threshold", xa - 0.02, xb + 0.02, y0 - t, y1, GROUND + hb, GROUND + hb + 0.04)
+    box("threshold", x0 - t, x1 + t, y0 - t - 0.02, y0 + 0.02, GROUND + hb, GROUND + hb + 0.04)
+    # cancelli a doghe verticali
+    for gx0, gx1 in gates:
+        yc = y1 + t / 2
+        box("frame", gx0, gx1, yc - 0.04, yc + 0.04, GROUND + 0.05, GROUND + 0.1)
+        box("frame", gx0, gx1, yc - 0.04, yc + 0.04, GROUND + 1.35, GROUND + 1.4)
         x = gx0 + 0.02
         while x < gx1 - 0.05:
-            box("frame", x, x + 0.04, 23.03, 23.09, GROUND + 0.05, GROUND + 1.4)
+            box("frame", x, x + 0.04, yc - 0.03, yc + 0.03, GROUND + 0.05, GROUND + 1.4)
             x += 0.09
-    # siepi laterali
-    for i, (x0, x1, y0, y1) in enumerate(((-4.4, -3.9, -4.0, 18.0), (9.2, 9.7, -4.0, 22.95), (-4.4, 9.7, -4.0, -3.5))):
-        hedge(x0, x1, y0, y1, 1.7, seed=i)
-    # aiuola con arbusti sotto la finestra della camera e lungo la facciata
+    # arbusti: sotto la finestra della camera, davanti alla cucina, sul retro
     for i, xx in enumerate([0.4, 1.3, 2.2]):
         blob("Siepe", (xx, 12.9, GROUND + 0.3), 0.45, seed=20 + i, squash=0.7, leaf=0.05)
-    for i, yy in enumerate([19.2, 20.4, 21.6]):
-        blob("Siepe", (7.8, yy + 1.0, GROUND + 0.35), 0.5, seed=30 + i, squash=0.7, leaf=0.05)
-    # alberi (come nella piantina: uno al centro del giardino, uno verso strada)
-    tree(0.2, 20.8, h=4.6, r=1.6, seed=3)
+    for i, xx in enumerate([5.2, 6.5, 7.8]):
+        blob("Siepe", (xx, 20.6, GROUND + 0.35), 0.5, seed=30 + i, squash=0.7, leaf=0.05)
+    for i, xx in enumerate([-3.0, -1.0, 1.0, 5.5, 7.6]):
+        blob("Siepe", (xx, -2.5, GROUND + 0.4), 0.55, seed=50 + i, squash=0.8, leaf=0.05)
+    # alberi (uno al centro del giardino come nella piantina, uno sul retro) + contesto fuori lotto
+    tree(0.2, 19.9, h=4.6, r=1.5, seed=3)
+    tree(-2.2, 1.6, h=4.2, r=1.4, seed=4)
     tree(-2.6, 25.5, h=5.0, r=1.8, seed=5)
     tree(12.5, 8.0, h=6.0, r=2.4, seed=7)
     tree(-8.0, 3.0, h=6.5, r=2.6, seed=9)
@@ -882,8 +903,8 @@ def add_exterior(M):
     # applique a parete accanto al portoncino
     box("frame", 3.93, 4.0, 12.35, 12.47, 1.95, 2.25)
     box("led", 3.925, 3.93, 12.37, 12.45, 1.97, 1.99)
-    # lampioncini da giardino lungo il vialetto
-    for yy in (16.6, 19.2, 21.8):
+    # lampioncini da giardino lungo il marciapiede
+    for yy in (16.6, 19.2):
         box("frame", 2.95, 3.07, yy - 0.06, yy + 0.06, GROUND, GROUND + 0.55)
         box("led", 2.96, 2.98, yy - 0.04, yy + 0.04, GROUND + 0.42, GROUND + 0.50)
 
@@ -1104,7 +1125,10 @@ def add_furniture():
 
 # ---------------------------------------------------------------- luce e camere
 
-SUN_AZ = math.radians(235)    # sole da sud-ovest (pomeriggio): illumina la facciata d'ingresso
+# Azimut misurato nel sistema della piantina (0 = alto, 90 = destra). Azimut reale = SUN_AZ + 270:
+# 235 -> 145 gradi reali, sole da sud-est a metà mattina. Illumina la facciata d'ingresso (sud),
+# il fronte del garage (est) ed entra dal finestrone della cucina (est).
+SUN_AZ = math.radians(235)
 SUN_EL = math.radians(32)
 
 
@@ -1192,7 +1216,7 @@ def add_ceiling_spots(points, energy=6):
 
 CAMERAS = {
     # nome: (posizione pianta x,y,z), (target x,y,z), lente mm, esposizione
-    "ext_ingresso": ((-2.6, 21.9, 1.6), (3.6, 12.6, 1.5), 20, -0.25),
+    "ext_ingresso": ((-2.4, 20.8, 1.6), (3.6, 12.6, 1.5), 20, -0.25),
     "ext_aerea": ((-11.5, 30.5, 12.5), (3.0, 10.0, 0.5), 28, -0.25),
     "int_soggiorno": ((4.75, 14.15, 1.45), (7.6, 9.9, 1.05), 17, 1.7),
     "int_divano": ((5.15, 9.95, 1.35), (7.3, 13.9, 0.95), 16, 1.7),

@@ -78,3 +78,23 @@ In metri, coordinata Y lungo il muro (vedi assets per la X):
 - Lotto totale dichiarato dall'utente: ≈ 300 m²
 - Retro casa non disegnato nella piantina: ≈ 70 m² residui (solo il
   numero, nessuna forma/profondità nota)
+
+## Lotto e orientamento (misure date dall'utente, sessione Claude Code)
+
+Orientamento reale della piantina: **basso = EST, sinistra = SUD, alto = OVEST, destra = NORD**.
+Quindi la facciata d'ingresso (portoncino, porta finestra cucina) guarda a sud, il fronte del
+garage e il finestrone del lavello guardano a est.
+
+Lotto: **25 × 12,5 m**. Nelle coordinate del modello (x verso destra, y verso il basso), filo interno dei muri di confine:
+
+| Confine | Coordinata | Misura dell'utente |
+|---|---|---|
+| In basso (est, su strada) | y = 21,20 | cucina → muro 2,45 m; garage → muro 10 m |
+| In alto (ovest, posteriore) | y ≈ −3,10 | ripostiglio → muro 3,2 m; porta finestra bagno grande → muro 8,6 m; garage → muro 8,2 m (dà −2,95: scarto di ~15-20 cm) |
+| Sinistra (sud) | x = −3,80 | la casa è larga 12,5 m: garage sul confine |
+| Destra (nord) | x = 8,70 | muro della zona giorno sul confine |
+
+- "Da ingresso a muro perimetrale sinistro 7,2 m" è stato interpretato come la posizione del
+  **cancelletto pedonale** sul muro in basso (x = 3,40): dalla facciata del portoncino al confine
+  sinistro la piantina dà 7,8 m, incompatibile. Da confermare con l'utente.
+- Muri di confine: 1,20 m su strada con cancello carrabile davanti al garage e cancelletto; 1,80 m sugli altri lati.
