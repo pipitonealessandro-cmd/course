@@ -44,7 +44,7 @@ In metri, coordinata Y lungo il muro (vedi assets per la X):
 - Finestra studio: y 4,00–5,20 (1,20 m), davanzale 0,90 m, sommità 2,30 m
 - Finestra soggiorno: y 11,30–12,30 (1,00 m), davanzale 0,90 m, sommità 2,30 m
 - Portoncino d'ingresso: y 12,60–13,60 (1,00 m), a terra, sommità 2,10 m
-- Porta finestra cucina: y 16,05–17,25 (1,20 m), a terra, sommità 2,30 m
+- Porta finestra cucina: y 16,70–17,90 (1,20 m), a terra, sommità 2,30 m — **spostata dall'utente** (prima 16,05–17,25): 60 cm dall'angolo interno, a filo del fronte dei mobili del lavello
 
 ## Facciata nord (retro zona notte)
 

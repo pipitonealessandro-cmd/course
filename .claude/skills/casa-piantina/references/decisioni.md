@@ -98,3 +98,7 @@ modello e per non riproporre opzioni già scartate.
   Scartata la proposta 2 (TV 43" con divanetto di fronte) perché toglieva il tavolo da 4.
 - Render e visore: `casa-render/` nel repository (script Blender/Cycles `build_scene.py`, pagina
   `viewer/index.html` con modello 3D, tour 360 e galleria).
+- **Porta finestra della cucina spostata** verso l'angolo in basso (est): 60 cm dall'angolo interno,
+  a filo dei mobili del lavello (y 16,70-17,90). Muro libero verso la vetrata: 2,15 m. Angolo pranzo
+  aggiornato: divanetto a panca 200 cm, tavolo 160 x 85, 2 sedie lato mobili = 5 posti; TV 32" invariata.
+  Scartato lo spostamento verso la vetrata (sovrapponeva passaggi e toglieva il posto alla TV).

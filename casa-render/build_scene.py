@@ -487,7 +487,7 @@ WALLS = [
     [7.10, 5.625, 8.575, 5.625, EXT, [[7.30, 8.20, "d"]], "N"],
     [8.575, 5.625, 8.575, 18.625, EXT, [], "E"],
     [4.125, 18.625, 8.575, 18.625, EXT, [[5.60, 7.10, "wc"]], "S"],
-    [4.125, 11.275, 4.125, 18.625, EXT, [[11.30, 12.30, "w"], [12.60, 13.60, "d"], [16.05, 17.25, "p"]], "W"],
+    [4.125, 11.275, 4.125, 18.625, EXT, [[11.30, 12.30, "w"], [12.60, 13.60, "d"], [16.70, 17.90, "p"]], "W"],
     [4.375, 6.775, 4.375, 11.025, EXT, [], None],
     [0.125, 6.775, 4.375, 6.775, EXT, [[3.05, 3.95, "d"]], None],
     [-3.675, 11.025, 4.375, 11.025, EXT, [[-3.175, -0.375, "g"], [1.40, 3.20, "w"]], "S"],
@@ -1022,22 +1022,22 @@ def add_furniture():
     cabinets(8.10, 8.45, 17.55, 18.45, 1.45, 2.20, "y", 1, plinth=0)
     box("steel", 8.05, 8.45, 16.85, 17.50, 1.62, 1.70, bevel=0.003)            # cappa sottopensile
     box("led", 8.11, 8.13, 15.46, 16.79, 1.44, 1.45)
-    # angolo pranzo (proposta 1): divanetto a panca sul muro ovest tra la vetrata e la porta finestra
-    # (1,50 m di muro libero), tavolo 140 x 85 ruotato davanti, 2 sedie, TV 32" su braccio.
-    # Passaggio dall'apertura di 1,80 m: libero tra y 14,55 e 15,55 davanti alla colonna frigo.
-    box("black_matte", 4.27, 4.93, 14.62, 15.98, 0.0, 0.06)                     # zoccolo
-    box("sofa", 4.25, 4.95, 14.60, 16.00, 0.06, 0.34, bevel=0.02)                # base
-    box("sofa", 4.40, 4.97, 14.62, 15.98, 0.34, 0.45, bevel=0.035)               # seduta
-    box("sofa", 4.25, 4.42, 14.60, 16.00, 0.34, 0.90, bevel=0.035)               # schienale
-    for i, yy in enumerate((14.66, 15.32)):                                      # cuscini
-        box("sofa2", 4.40, 4.56, yy, yy + 0.62, 0.45, 0.82, bevel=0.06)
-    box("walnut", 5.05, 5.90, 14.70, 16.10, 0.72, 0.76, bevel=0.004)             # tavolo 140 x 85
-    for lx, ly in ((5.11, 14.76), (5.80, 14.76), (5.11, 16.00), (5.80, 16.00)):
+    # angolo pranzo: porta finestra spostata a 60 cm dall'angolo (a filo dei mobili del lavello),
+    # 2,15 m di muro libero -> divanetto a panca 200 cm, tavolo 160 x 85, 2 sedie: 5 posti.
+    # Passaggio dall'apertura di 1,80 m: libero tra y 14,55 e 15,45 davanti alla colonna frigo.
+    box("black_matte", 4.27, 4.93, 14.62, 16.58, 0.0, 0.06)                     # zoccolo
+    box("sofa", 4.25, 4.95, 14.60, 16.60, 0.06, 0.34, bevel=0.02)                # base
+    box("sofa", 4.40, 4.97, 14.62, 16.58, 0.34, 0.45, bevel=0.035)               # seduta
+    box("sofa", 4.25, 4.42, 14.60, 16.60, 0.34, 0.90, bevel=0.035)               # schienale
+    for yy in (14.66, 15.32, 15.98):                                             # cuscini
+        box("sofa2", 4.40, 4.56, yy, yy + 0.58, 0.45, 0.82, bevel=0.06)
+    box("walnut", 5.05, 5.90, 14.80, 16.40, 0.72, 0.76, bevel=0.004)             # tavolo 160 x 85
+    for lx, ly in ((5.11, 14.86), (5.80, 14.86), (5.11, 16.30), (5.80, 16.30)):
         B("black_matte", lx, ly, 0.04, 0.04, 0.72)
-    chair(6.00, 15.55, "W")                                                      # lato est
-    chair(5.26, 16.22, "N")                                                      # capotavola
-    pendant(5.48, 15.05)
-    pendant(5.48, 15.78)
+    chair(6.00, 15.45, "W")                                                      # lato mobili
+    chair(6.00, 15.95, "W")
+    pendant(5.48, 15.20)
+    pendant(5.48, 16.00)
     # TV 32" (0,73 x 0,43 m) su braccio orientabile, sul muretto accanto alla vetrata
     box("black_matte", 4.98, 5.14, 14.55, 14.57, 1.25, 1.45)                     # piastra a muro
     box("black_matte", 5.04, 5.08, 14.57, 14.66, 1.33, 1.37)                     # braccio
