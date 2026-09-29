@@ -43,6 +43,8 @@ section.view{position:absolute;inset:0}
 .dock{position:absolute;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:8px;pointer-events:none}
 .row{display:flex;gap:6px;flex-wrap:wrap;pointer-events:auto}
 .chip{font:600 12.5px var(--body);color:var(--ink);background:var(--scrim);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid var(--line);border-radius:999px;padding:8px 13px;cursor:pointer;white-space:nowrap}
+.chip.select{appearance:none;-webkit-appearance:none;padding-right:30px;background-image:linear-gradient(45deg,transparent 50%,currentColor 50%),linear-gradient(135deg,currentColor 50%,transparent 50%);background-position:calc(100% - 15px) 55%,calc(100% - 10px) 55%;background-size:5px 5px,5px 5px;background-repeat:no-repeat}
+.chip.select option{color:#1d2023;background:#fff}
 .chip.on{background:var(--oak);border-color:var(--oak);color:var(--oak-ink)}
 .chip.toggle::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:7px;vertical-align:1px;border:1.5px solid currentColor}
 .chip.toggle.on::before{background:currentColor}
@@ -145,7 +147,7 @@ figcaption b{color:var(--ink);font-weight:650;margin-right:6px}
 <script>
 (function(){
 "use strict";
-// ---------------------------------------------------------------- dati della casa (metri, x est, y sud)
+// ---------------------------------------------------------------- dati della casa (metri; x = destra della piantina = nord, y = basso = est)
 var ROOMS=[
   ['Soggiorno',6.4,11.6,'3,95 × 5,05 m'],['Cucina',6.35,16.3,'4,20 × 4,00 m'],
   ['Camera',2.25,8.9,'4,00 × 4,00 m'],['Cameretta',5.5,2.4,'2,70 × 4,30 m'],
@@ -160,21 +162,39 @@ var VIEWS={
   soggiorno:{label:'Soggiorno',walk:true,pos:[4.8,14.1],look:[7.6,9.9],room:0},
   cucina:{label:'Cucina',walk:true,pos:[7.3,17.3],look:[4.6,15.0],room:1},
   camera:{label:'Camera',walk:true,pos:[3.2,10.5],look:[0.6,8.4],room:2},
-  ingresso:{label:'Giardino',walk:true,pos:[-2.3,20.6],look:[3.6,12.6],eye:1.65}
+  cameretta:{label:'Cameretta',walk:true,pos:[5.2,3.9],look:[6.4,1.5],room:3},
+  studio:{label:'Studio',walk:true,pos:[2.2,6.0],look:[0.6,4.5],room:4},
+  bagnog:{label:'Bagno grande',walk:true,pos:[8.1,5.95],look:[6.5,7.3],room:7,pitch:-0.35},
+  bagnop:{label:'Bagno piccolo',walk:true,pos:[2.6,3.35],look:[1.2,2.0],room:5,pitch:-0.35},
+  lavanderia:{label:'Lavanderia',walk:true,pos:[6.0,7.9],look:[8.3,8.9],room:8,pitch:-0.25},
+  corridoio:{label:'Corridoio',walk:true,pos:[3.5,1.0],look:[3.5,6.0],room:10},
+  garage:{label:'Garage',walk:true,pos:[-0.6,10.4],look:[-2.8,6.5],room:9},
+  ingresso:{label:'Giardino davanti',walk:true,pos:[-2.3,20.6],look:[3.6,12.6],eye:1.65},
+  retro:{label:'Giardino posteriore',walk:true,pos:[-3.2,-2.6],look:[3.5,3.0],eye:1.65}
 };
+var QUICK=['esterno','pianta'];
 var PANOS=[
   {id:'soggiorno',name:'Soggiorno',dim:'3,95 × 5,05 m · divano Tosaro 240 × 165',yaw:35},
-  {id:'cucina',name:'Cucina',dim:'4,20 × 4,00 m · vetrata telescopica 1,80 m',yaw:-110},
+  {id:'cucina',name:'Cucina',dim:'4,20 × 4,00 m · divanetto 200, tavolo 160 × 85',yaw:-110},
   {id:'camera',name:'Camera',dim:'4,00 × 4,00 m',yaw:-50},
-  {id:'giardino',name:'Giardino',dim:'fronte ≈ 7,8 × 11,3 m (stima)',yaw:30}
+  {id:'cameretta',name:'Cameretta',dim:'2,70 × 4,30 m',yaw:40},
+  {id:'studio',name:'Studio',dim:'≈ 2,60 × 3,00 m',yaw:-65},
+  {id:'bagno_grande',name:'Bagno grande',dim:'2,75 × 1,80 m · doccia 1,30 × 1,00',yaw:160},
+  {id:'bagno_piccolo',name:'Bagno piccolo',dim:'2,60 × 1,70 m',yaw:-30},
+  {id:'lavanderia',name:'Lavanderia',dim:'≈ 2,75 × 1,70 m',yaw:115},
+  {id:'corridoio',name:'Corridoio',dim:'largo 1,10 m',yaw:180},
+  {id:'garage',name:'Garage',dim:'3,55 × 4,10 m',yaw:180},
+  {id:'giardino',name:'Giardino davanti',dim:'7,80 × 10 m · lotto 25 × 12,5 m',yaw:30},
+  {id:'retro',name:'Giardino posteriore',dim:'3,2 m dietro la zona notte · 8,2 m dietro il garage',yaw:140}
 ];
 var RENDERS=[
-  ['ext_ingresso','Ingresso','facciata ovest, portoncino e porta finestra della cucina'],
-  ['ext_aerea','Vista aerea','lotto ≈ 300 m², fronte e piazzale'],
+  ['ext_ingresso','Ingresso','facciata sud: portoncino e porta finestra della cucina'],
+  ['ext_aerea','Vista aerea','lotto 25 × 12,5 m con muri di confine'],
+  ['ext_retro','Giardino posteriore','retro della zona notte e del garage'],
   ['int_soggiorno','Soggiorno','divano Tosaro, parete attrezzata, porta scorrevole in vetro'],
   ['int_divano','Soggiorno','verso la vetrata telescopica della cucina'],
-  ['int_cucina','Cucina','finestrone 1,50 × 0,90 sul lavello'],
-  ['int_cucina2','Cucina','verso il soggiorno, vetrata da 1,80 m']
+  ['int_cucina','Cucina','divanetto 200, tavolo 160 × 85, TV 32"'],
+  ['int_cucina2','Cucina','verso la vetrata da 1,80 m e i mobili a est']
 ];
 
 // ---------------------------------------------------------------- schede
@@ -230,10 +250,12 @@ var pano=(function(){
     cube.style.transform='translateZ('+P+'px) rotateX('+pitch+'deg) rotateY('+yaw+'deg)';
   }
   var list=document.getElementById('panoList');
-  PANOS.forEach(function(p){
-    var b=document.createElement('button'); b.className='chip'; b.textContent=p.name; b.dataset.id=p.id;
-    b.onclick=function(){api.open(p.id,true);}; list.appendChild(b);
-  });
+  var psel=document.createElement('select'); psel.className='chip select on'; psel.id='panoSelect'; psel.setAttribute('aria-label','Scegli l\'ambiente');
+  psel.innerHTML=PANOS.map(function(p){return '<option value="'+p.id+'">'+p.name+'</option>';}).join('');
+  psel.onchange=function(){api.open(psel.value,true);};
+  list.appendChild(psel);
+  function step(d){var i=PANOS.findIndex(function(p){return p.id===api.cur;});api.open(PANOS[(i+d+PANOS.length)%PANOS.length].id,true);}
+  [['‹ Precedente',-1],['Successivo ›',1]].forEach(function(x){var b=document.createElement('button');b.className='chip';b.textContent=x[0];b.onclick=function(){step(x[1]);};list.appendChild(b);});
   api.open=function(id,resetView){
     var p=PANOS.filter(function(q){return q.id===id;})[0];
     if(api.cur!==id||resetView){ yaw=p.yaw; pitch=0; }
@@ -245,7 +267,7 @@ var pano=(function(){
     });
     document.getElementById('panoName').textContent=p.name;
     document.getElementById('panoDim').textContent=p.dim;
-    [].forEach.call(list.children,function(b){b.classList.toggle('on',b.dataset.id===id);});
+    psel.value=id;
     update();
   };
   el.addEventListener('pointerdown',function(e){drag={x:e.clientX,y:e.clientY};try{el.setPointerCapture(e.pointerId);}catch(_){}});
@@ -442,7 +464,8 @@ function initThree(){
   function lookFromYaw(){var cp=Math.cos(walk.pitch);return new THREE.Vector3(camera.position.x+Math.sin(walk.yaw)*cp,camera.position.y+Math.sin(walk.pitch),camera.position.z-Math.cos(walk.yaw)*cp);}
   function setView(id,instant){
     var v=VIEWS[id];
-    [].forEach.call(document.getElementById('views').children,function(b){b.classList.toggle('on',b.dataset.id===id);});
+    [].forEach.call(document.querySelectorAll('#views button'),function(b){b.classList.toggle('on',b.dataset.id===id);});
+    var rs=document.getElementById('roomSelect'); if(rs){ rs.value=v.walk?id:''; rs.classList.toggle('on',!!v.walk); }
     if(v.orbit){
       setMode('orbit'); setRoof(v.roof);
       animateTo(new THREE.Vector3().fromArray(v.pos),new THREE.Vector3().fromArray(v.target),instant);
@@ -450,7 +473,7 @@ function initThree(){
       setRoof(true); setMode('walk');
       walk.eye=v.eye||1.6;
       var p=new THREE.Vector3(v.pos[0],walk.eye,v.pos[1]);
-      walk.yaw=Math.atan2(v.look[0]-v.pos[0],-(v.look[1]-v.pos[1])); walk.pitch=-0.05;
+      walk.yaw=Math.atan2(v.look[0]-v.pos[0],-(v.look[1]-v.pos[1])); walk.pitch=v.pitch!=null?v.pitch:-0.05;
       animateTo(p,null,instant);
       var info=document.getElementById('roomInfo');
       if(v.room!=null){info.hidden=false;document.getElementById('roomName').textContent=ROOMS[v.room][0];document.getElementById('roomDim').textContent=ROOMS[v.room][3];}
@@ -470,10 +493,14 @@ function initThree(){
   }
 
   var vb=document.getElementById('views');
-  Object.keys(VIEWS).forEach(function(id){
+  QUICK.forEach(function(id){
     var b=document.createElement('button');b.className='chip';b.textContent=VIEWS[id].label;b.dataset.id=id;
     b.onclick=function(){setView(id);};vb.appendChild(b);
   });
+  var sel=document.createElement('select');sel.className='chip select';sel.id='roomSelect';sel.setAttribute('aria-label','Vai a una stanza');
+  sel.innerHTML='<option value="">Vai a…</option>'+Object.keys(VIEWS).filter(function(id){return QUICK.indexOf(id)<0;}).map(function(id){return '<option value="'+id+'">'+VIEWS[id].label+'</option>';}).join('');
+  sel.onchange=function(){ if(sel.value) setView(sel.value); };
+  vb.appendChild(sel);
   document.getElementById('tRoof').onclick=function(){setRoof(!roofOn);};
   document.getElementById('tLabels').onclick=function(){labelsOn=!labelsOn;this.classList.toggle('on',labelsOn);dirty=true;};
   document.getElementById('tWalk').onclick=function(){

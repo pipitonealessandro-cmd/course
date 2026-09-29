@@ -1235,6 +1235,7 @@ CAMERAS = {
     "int_soggiorno": ((4.75, 14.15, 1.45), (7.6, 9.9, 1.05), 17, 1.7),
     "int_divano": ((5.15, 9.95, 1.35), (7.3, 13.9, 0.95), 16, 1.7),
     "int_cucina": ((7.45, 17.45, 1.5), (4.5, 15.0, 1.0), 16, 1.5),
+    "ext_retro": ((-3.4, -2.8, 1.65), (3.5, 3.0, 1.3), 18, -0.25),
     "int_cucina2": ((4.6, 17.9, 1.55), (7.2, 14.6, 1.0), 16, 1.5),
 }
 
@@ -1299,7 +1300,11 @@ def build():
     setup_world()
     add_portals()
     add_ceiling_spots([(5.4, 10.4), (7.4, 10.4), (5.4, 13.4), (7.4, 13.4),
-                       (5.2, 15.2), (7.3, 15.2), (5.2, 17.3), (7.3, 17.3)])
+                       (5.2, 15.2), (7.3, 15.2), (5.2, 17.3), (7.3, 17.3),
+                       (5.5, 1.6), (5.5, 3.6), (1.55, 4.6), (1.55, 5.9), (1.55, 2.7), (1.55, 1.0),
+                       (7.0, 6.6), (6.2, 5.15), (7.0, 8.5), (3.5, 1.3), (3.5, 3.4), (3.5, 5.0),
+                       (4.2, 6.15), (5.05, 7.6), (5.05, 8.8), (1.3, 8.1), (3.0, 9.7),
+                       (-2.6, 7.9), (-1.0, 7.9), (-2.6, 9.9), (-1.0, 9.9), (-2.7, 6.1)])
     for n, (p, t, lens, _) in CAMERAS.items():
         add_camera(n, p, t, lens)
 
@@ -1327,7 +1332,17 @@ PANOS = {
     "cucina": (7.15, 16.75, 1.55),
     "camera": (2.75, 10.1, 1.55),
     "giardino": (1.1, 17.4, 1.55),
+    "retro": (-1.0, -1.3, 1.6),
+    "cameretta": (5.3, 3.4, 1.55),
+    "studio": (1.9, 5.4, 1.55),
+    "bagno_grande": (7.0, 6.3, 1.55),
+    "bagno_piccolo": (1.6, 3.0, 1.55),
+    "lavanderia": (6.9, 8.2, 1.55),
+    "corridoio": (3.5, 4.3, 1.55),
+    "garage": (-1.8, 8.9, 1.55),
 }
+PANO_EXPOSURE = {"giardino": -0.25, "retro": -0.25, "garage": 2.8, "bagno_grande": 2.3, "bagno_piccolo": 2.1,
+                 "lavanderia": 2.3, "corridoio": 2.2, "studio": 1.8, "cameretta": 1.6}
 # facce del cubo: (nome, direzione, "alto" dell'immagine) in coordinate Blender
 FACES = [("n", (0, 1, 0), (0, 0, 1)), ("e", (1, 0, 0), (0, 0, 1)), ("s", (0, -1, 0), (0, 0, 1)),
          ("w", (-1, 0, 0), (0, 0, 1)), ("u", (0, 0, 1), (0, -1, 0)), ("d", (0, 0, -1), (0, 1, 0))]
@@ -1350,7 +1365,7 @@ def render_panos(names, size, samples, out):
     for n in names:
         x, y, z = PANOS[n]
         ob.location = (x, -y, z)
-        sc.view_settings.exposure = -0.25 if n == "giardino" else 1.5
+        sc.view_settings.exposure = PANO_EXPOSURE.get(n, 1.5)
         for f, d, u in FACES:
             fw, up = Vector(d), Vector(u)
             right = fw.cross(up)
