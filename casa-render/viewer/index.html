@@ -59,6 +59,11 @@ section.view{position:absolute;inset:0}
 .compass .n{fill:var(--oak)}
 .compass .s{fill:var(--muted);opacity:.5}
 .compass text{font:700 7px var(--body);fill:var(--ink);text-anchor:middle}
+.mlbl{position:absolute;transform:translate(-50%,-50%);background:#c2410c;color:#fff;font:700 12px var(--mono);padding:3px 7px;border-radius:6px;white-space:nowrap;pointer-events:none;font-variant-numeric:tabular-nums;box-shadow:0 1px 4px rgba(0,0,0,.3)}
+#panoSvg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}
+#panoSvg line{stroke:#c2410c;stroke-width:3;stroke-linecap:round}
+#panoSvg circle{fill:#c2410c;stroke:#fff;stroke-width:2}
+#panoMeasure{position:absolute;inset:0;pointer-events:none}
 .labels{position:absolute;inset:0;pointer-events:none;overflow:hidden}
 .lbl{position:absolute;transform:translate(-50%,-50%);text-align:center;background:var(--scrim);border:1px solid var(--line);border-radius:7px;padding:3px 7px;white-space:nowrap}
 .lbl b{display:block;font:650 11.5px var(--body)}
@@ -120,6 +125,8 @@ figcaption b{color:var(--ink);font-weight:650;margin-right:6px}
           <button class="chip toggle on" id="tLabels">Nomi e misure</button>
           <button class="chip toggle" id="tWalk">Passeggia</button>
           <button class="chip toggle on" id="tPerson">Persona 1,75 m</button>
+          <button class="chip toggle" id="tMeasure">Misura</button>
+          <button class="chip" id="tClear" hidden>Cancella misure</button>
         </div>
       </div>
     </section>
@@ -127,11 +134,16 @@ figcaption b{color:var(--ink);font-weight:650;margin-right:6px}
     <!-- TOUR 360 -->
     <section class="view" id="v360" hidden>
       <div id="pano"><div id="cube"></div></div>
+      <div id="panoMeasure"><svg id="panoSvg"></svg></div>
       <div class="status" id="panoMissing" hidden><p>Il panorama di questo ambiente è ancora in calcolo. Riprova tra poco.</p></div>
       <div class="room" id="panoInfo"><b id="panoName"></b><span id="panoDim"></span></div>
       <div class="dock">
-        <div class="hint">Trascina per guardarti intorno · render Cycles fotorealistici</div>
+        <div class="hint" id="panoHint">Trascina per guardarti intorno · render Cycles fotorealistici</div>
         <div class="row" id="panoList"></div>
+        <div class="row">
+          <button class="chip toggle" id="pMeasure">Misura</button>
+          <button class="chip" id="pClear" hidden>Cancella misure</button>
+        </div>
       </div>
     </section>
 
@@ -190,6 +202,7 @@ var PANOS=[
   {id:'giardino',name:'Giardino davanti',dim:'7,80 × 10 m · lotto 25 × 12,5 m',yaw:30},
   {id:'retro',name:'Giardino posteriore',dim:'3,2 m dietro la zona notte · 8,2 m dietro il garage',yaw:140}
 ];
+var PANO_POS={"soggiorno": [5.6, 13.55, 1.55], "cucina": [7.15, 16.75, 1.55], "camera": [2.75, 10.1, 1.55], "giardino": [1.1, 17.4, 1.55], "retro": [-1.0, -1.3, 1.6], "studiolo": [2.35, 1.35, 1.55], "cameretta": [5.3, 3.4, 1.55], "studio": [1.9, 5.4, 1.55], "bagno_grande": [7.0, 6.3, 1.55], "bagno_piccolo": [1.6, 3.0, 1.55], "lavanderia": [6.9, 8.2, 1.55], "corridoio": [3.5, 4.3, 1.55], "garage": [-1.8, 8.9, 1.55]}; // da build_scene.py PANOS
 var RENDERS=[
   ['ext_ingresso','Ingresso','facciata sud: portoncino e porta finestra della cucina'],
   ['ext_aerea','Vista aerea','lotto 25 × 12,5 m con muri di confine'],
@@ -199,6 +212,45 @@ var RENDERS=[
   ['int_cucina','Cucina','divanetto 200, tavolo 160 × 85, TV 32"'],
   ['int_cucina2','Cucina','verso la vetrata da 1,80 m e i mobili a est']
 ];
+
+// ---------------------------------------------------------------- modello condiviso (modello 3D e misure nel tour)
+// Il modello è un glTF con il buffer in base64. La pagina pubblicata non può fare fetch di URI data:,
+// quindi ricostruisco in memoria un GLB (JSON + binario) e lo passo al parser, senza richieste extra.
+function toGLB(json){
+  var uri=json.buffers[0].uri, b64=uri.slice(uri.indexOf(',')+1), bin=atob(b64), n=bin.length;
+  var body=new Uint8Array((n+3)&~3); for(var i=0;i<n;i++) body[i]=bin.charCodeAt(i);
+  delete json.buffers[0].uri;
+  var js=new TextEncoder().encode(JSON.stringify(json)), jl=(js.length+3)&~3;
+  var out=new ArrayBuffer(12+8+jl+8+body.length), dv=new DataView(out), u8=new Uint8Array(out);
+  dv.setUint32(0,0x46546C67,true); dv.setUint32(4,2,true); dv.setUint32(8,out.byteLength,true);
+  dv.setUint32(12,jl,true); dv.setUint32(16,0x4E4F534A,true); u8.fill(0x20,20,20+jl); u8.set(js,20);
+  var o=20+jl; dv.setUint32(o,body.length,true); dv.setUint32(o+4,0x004E4942,true); u8.set(body,o+8);
+  return out;
+}
+var MODEL={root:null,cbs:[],busy:false};
+function getModel(onLoad,onProgress,onErr){
+  if(MODEL.root){onLoad(MODEL.root);return;}
+  MODEL.cbs.push({ok:onLoad,err:onErr||function(){}});
+  if(MODEL.busy) return;
+  MODEL.busy=true;
+  function fail(e){MODEL.busy=false;var c=MODEL.cbs;MODEL.cbs=[];c.forEach(function(x){x.err(e);});}
+  if(!window.THREE||!THREE.GLTFLoader){fail();return;}
+  var xhr=new XMLHttpRequest(); xhr.open('GET','casa.json'); xhr.responseType='json';
+  xhr.onprogress=function(x){ if(onProgress&&x.total) onProgress(x.loaded/x.total); };
+  xhr.onload=function(){
+    if(xhr.status&&xhr.status!==200||!xhr.response){fail();return;}
+    try{
+      new THREE.GLTFLoader().parse(toGLB(xhr.response),'',function(g){
+        var r=g.scene; r.updateMatrixWorld(true);
+        r.traverse(function(o){ if(o.isMesh) o.userData.mat=o.material&&o.material.name; });
+        MODEL.root=r; MODEL.busy=false;
+        var c=MODEL.cbs; MODEL.cbs=[]; c.forEach(function(x){x.ok(r);});
+      },fail);
+    }catch(e){fail(e);}
+  };
+  xhr.onerror=fail; xhr.send();
+}
+function fmtM(d){return d.toFixed(2).replace('.',',')+' m';}
 
 // ---------------------------------------------------------------- schede
 var tabs=[].slice.call(document.querySelectorAll('nav.tabs button'));
@@ -251,7 +303,71 @@ var pano=(function(){
     P=(h/2)/Math.tan(fov*Math.PI/360);
     el.style.perspective=P+'px';
     cube.style.transform='translateZ('+P+'px) rotateX('+pitch+'deg) rotateY('+yaw+'deg)';
+    drawMeasures();
   }
+
+  // ---- misure nel panorama: il raggio parte dal punto di ripresa (noto) e colpisce il modello 3D
+  var svg=document.getElementById('panoSvg'), mBox=document.getElementById('panoMeasure');
+  var mOn=false, mPts=[], mSegs=[], mDown=null, rc=null;
+  function camPos(){var p=PANO_POS[api.cur];return p?{x:p[0],y:p[2],z:p[1]}:null;}
+  function screenToDir(sx,sy){      // pixel rispetto al centro -> direzione nel mondo (x destra piantina, y su, z basso piantina)
+    var p=pitch*Math.PI/180, yw=yaw*Math.PI/180, x=sx, y=sy, z=-P;
+    var y1=y*Math.cos(p)+z*Math.sin(p), z1=-y*Math.sin(p)+z*Math.cos(p);
+    var x2=x*Math.cos(yw)-z1*Math.sin(yw), z2=x*Math.sin(yw)+z1*Math.cos(yw);
+    var l=Math.hypot(x2,y1,z2); return {x:x2/l,y:-y1/l,z:z2/l};
+  }
+  function project(pt){               // punto nel mondo -> pixel sullo schermo (o null se dietro)
+    var c=camPos(); if(!c) return null;
+    var p=pitch*Math.PI/180, yw=yaw*Math.PI/180;
+    var x=pt.x-c.x, y=-(pt.y-c.y), z=pt.z-c.z;
+    var x1=x*Math.cos(yw)+z*Math.sin(yw), z1=-x*Math.sin(yw)+z*Math.cos(yw);
+    var y2=y*Math.cos(p)-z1*Math.sin(p), z2=y*Math.sin(p)+z1*Math.cos(p);
+    if(z2>-0.05) return null;
+    return {x:el.clientWidth/2+x1*P/-z2, y:el.clientHeight/2+y2*P/-z2};
+  }
+  function drawMeasures(){
+    if(!svg) return;
+    var out='';
+    mSegs.forEach(function(sg){
+      var a=project(sg.a), b=project(sg.b);
+      if(a&&b) out+='<line x1="'+a.x+'" y1="'+a.y+'" x2="'+b.x+'" y2="'+b.y+'"/>';
+      [a,b].forEach(function(q){ if(q) out+='<circle cx="'+q.x+'" cy="'+q.y+'" r="5"/>'; });
+      var m=project({x:(sg.a.x+sg.b.x)/2,y:(sg.a.y+sg.b.y)/2,z:(sg.a.z+sg.b.z)/2});
+      sg.el.hidden=!m; if(m){sg.el.style.left=m.x+'px';sg.el.style.top=m.y+'px';}
+    });
+    mPts.forEach(function(pt){var q=project(pt); if(q) out+='<circle cx="'+q.x+'" cy="'+q.y+'" r="5"/>';});
+    svg.innerHTML=out;
+  }
+  function clearMeasures(){ mSegs.forEach(function(sg){sg.el.remove();}); mSegs=[]; mPts=[]; drawMeasures(); document.getElementById('pClear').hidden=!mOn; }
+  function pick(e){
+    var c=camPos(); if(!c) return;
+    var r=el.getBoundingClientRect(), d=screenToDir(e.clientX-r.left-r.width/2, e.clientY-r.top-r.height/2);
+    getModel(function(root){
+      if(!rc) rc=new THREE.Raycaster();
+      rc.set(new THREE.Vector3(c.x,c.y,c.z), new THREE.Vector3(d.x,d.y,d.z));
+      var h=rc.intersectObject(root,true).filter(function(x){return x.object.userData.mat!=='Vetro';})[0];
+      var pt=null;
+      if(h) pt={x:h.point.x,y:h.point.y,z:h.point.z};
+      else if(d.y<-0.01){ var t=(-0.12-c.y)/d.y; pt={x:c.x+d.x*t,y:-0.12,z:c.z+d.z*t}; }   // terreno del giardino
+      if(!pt) return;
+      if(!mPts.length){ mPts=[pt]; }
+      else{
+        var a=mPts[0], lab=document.createElement('div'); lab.className='mlbl';
+        lab.textContent=fmtM(Math.hypot(pt.x-a.x,pt.y-a.y,pt.z-a.z)); mBox.appendChild(lab);
+        mSegs.push({a:a,b:pt,el:lab}); mPts=[]; document.getElementById('pClear').hidden=false;
+      }
+      drawMeasures();
+    },null,function(){ document.getElementById('panoHint').textContent='Non riesco a caricare il modello per misurare. Ricarica la pagina.'; });
+  }
+  document.getElementById('pMeasure').onclick=function(){
+    mOn=!mOn; this.classList.toggle('on',mOn);
+    document.getElementById('pClear').hidden=!(mOn||mSegs.length);
+    document.getElementById('panoHint').textContent=mOn?'Tocca due punti per misurare · la distanza è calcolata sul modello 3D'
+      :'Trascina per guardarti intorno · render Cycles fotorealistici';
+    if(mOn) getModel(function(){},null,null);
+    if(!mOn){ mPts=[]; drawMeasures(); }
+  };
+  document.getElementById('pClear').onclick=clearMeasures;
   var list=document.getElementById('panoList');
   var psel=document.createElement('select'); psel.className='chip select on'; psel.id='panoSelect'; psel.setAttribute('aria-label','Scegli l\'ambiente');
   psel.innerHTML=PANOS.map(function(p){return '<option value="'+p.id+'">'+p.name+'</option>';}).join('');
@@ -261,6 +377,7 @@ var pano=(function(){
   [['‹ Precedente',-1],['Successivo ›',1]].forEach(function(x){var b=document.createElement('button');b.className='chip';b.textContent=x[0];b.onclick=function(){step(x[1]);};list.appendChild(b);});
   api.open=function(id,resetView){
     var p=PANOS.filter(function(q){return q.id===id;})[0];
+    if(api.cur!==id) clearMeasures();
     if(api.cur!==id||resetView){ yaw=p.yaw; pitch=0; }
     api.cur=id;
     var miss=document.getElementById('panoMissing'); miss.hidden=true;
@@ -273,7 +390,8 @@ var pano=(function(){
     psel.value=id;
     update();
   };
-  el.addEventListener('pointerdown',function(e){drag={x:e.clientX,y:e.clientY};try{el.setPointerCapture(e.pointerId);}catch(_){}});
+  el.addEventListener('pointerdown',function(e){drag={x:e.clientX,y:e.clientY};mDown={x:e.clientX,y:e.clientY};try{el.setPointerCapture(e.pointerId);}catch(_){}});
+  el.addEventListener('pointerup',function(e){ if(mOn&&mDown&&Math.hypot(e.clientX-mDown.x,e.clientY-mDown.y)<6) pick(e); mDown=null; });
   el.addEventListener('pointermove',function(e){
     if(!drag) return;
     var k=fov/el.clientHeight;
@@ -407,30 +525,7 @@ function initThree(){
 
   var roofParts=[], floors=[];
   var bar=document.getElementById('bar');
-  // Il modello è un glTF con il buffer in base64. La pagina pubblicata non può fare fetch di URI data:,
-  // quindi ricostruisco in memoria un GLB (JSON + binario) e lo passo al parser, senza richieste extra.
-  function toGLB(json){
-    var uri=json.buffers[0].uri, b64=uri.slice(uri.indexOf(',')+1), bin=atob(b64), n=bin.length;
-    var body=new Uint8Array((n+3)&~3); for(var i=0;i<n;i++) body[i]=bin.charCodeAt(i);
-    delete json.buffers[0].uri;
-    var js=new TextEncoder().encode(JSON.stringify(json)), jl=(js.length+3)&~3;
-    var out=new ArrayBuffer(12+8+jl+8+body.length), dv=new DataView(out), u8=new Uint8Array(out);
-    dv.setUint32(0,0x46546C67,true); dv.setUint32(4,2,true); dv.setUint32(8,out.byteLength,true);
-    dv.setUint32(12,jl,true); dv.setUint32(16,0x4E4F534A,true); u8.fill(0x20,20,20+jl); u8.set(js,20);
-    var o=20+jl; dv.setUint32(o,body.length,true); dv.setUint32(o+4,0x004E4942,true); u8.set(body,o+8);
-    return out;
-  }
-  function loadModel(onLoad,onErr){
-    var xhr=new XMLHttpRequest(); xhr.open('GET','casa.json'); xhr.responseType='json';
-    xhr.onprogress=function(x){ if(x.total) bar.style.width=(90*x.loaded/x.total)+'%'; };
-    xhr.onload=function(){
-      if(xhr.status&&xhr.status!==200||!xhr.response){onErr();return;}
-      try{ new THREE.GLTFLoader().parse(toGLB(xhr.response),'',onLoad,onErr); }catch(e){ onErr(e); }
-    };
-    xhr.onerror=onErr; xhr.send();
-  }
-  loadModel(function(gltf){
-    var root=gltf.scene; root.updateMatrixWorld(true);
+  getModel(function(root){
     root.traverse(function(o){
       if(!o.isMesh) return;
       var name=o.material&&o.material.name, m=MAT[name]||M({c:0xcccccc});
@@ -445,7 +540,7 @@ function initThree(){
     addGarden();
     document.getElementById('status').hidden=true;
     setView('esterno',true);
-  },function(){fail('Il modello non si è caricato. Ricarica la pagina; se il problema resta, usa il Tour 360°.');});
+  },function(f){ bar.style.width=(90*f)+'%'; },function(){fail('Il modello non si è caricato. Ricarica la pagina; se il problema resta, usa il Tour 360°.');});
 
   // ---- giardino: prato, siepi e alberi semplificati (quelli dei render hanno foglie vere)
   function addGarden(){
@@ -506,6 +601,52 @@ function initThree(){
   canvas.addEventListener('pointerup',endDrag,{capture:true});
   canvas.addEventListener('pointercancel',endDrag,{capture:true});
 
+  // ---- strumento di misura: due tocchi = una distanza
+  var measureOn=false, mGroup=new THREE.Group(), mItems=[], mPending=null, mDown=null;
+  mGroup.renderOrder=999; scene.add(mGroup);
+  var mLineMat=new THREE.LineBasicMaterial({color:0xc2410c,depthTest:false,transparent:true});
+  var mDotMat=new THREE.MeshBasicMaterial({color:0xc2410c,depthTest:false,transparent:true});
+  var mDotGeo=new THREE.SphereGeometry(0.035,12,8);
+  function mDot(p){var d=new THREE.Mesh(mDotGeo,mDotMat);d.position.copy(p);d.renderOrder=999;mGroup.add(d);return d;}
+  function setMeasure(on){
+    measureOn=on; document.getElementById('tMeasure').classList.toggle('on',on);
+    document.getElementById('tClear').hidden=!(on||mItems.length);
+    document.getElementById('hint').textContent=on?'Tocca due punti su pavimento, muri o mobili per misurare la distanza'
+      :(mode==='walk'?'Trascina per guardarti intorno · tocca il pavimento per camminare · tasti W A S D':'Trascina per ruotare · pizzica o rotella per zoomare · trascina la persona per spostarla');
+    if(!on&&mPending){mGroup.remove(mPending.dot);mPending=null;} dirty=true;
+  }
+  document.getElementById('tMeasure').onclick=function(){setMeasure(!measureOn);};
+  document.getElementById('tClear').onclick=function(){
+    mItems.forEach(function(it){it.el.remove();}); mItems=[]; mPending=null;
+    while(mGroup.children.length) mGroup.remove(mGroup.children[0]);
+    document.getElementById('tClear').hidden=!measureOn; dirty=true;
+  };
+  function measurePick(e){
+    var hits=rayFrom(e).intersectObjects(scene.children,true).filter(function(h){
+      var o=h.object; if(!o.visible||!o.isMesh) return false;
+      if(o.userData.mat==='Vetro'||personParts.indexOf(o)>=0||o.parent===mGroup) return false;
+      for(var p=o.parent;p;p=p.parent) if(p.visible===false) return false;
+      return true;
+    });
+    if(!hits[0]) return;
+    var pt=hits[0].point.clone();
+    if(!mPending){ mPending={p:pt,dot:mDot(pt)}; }
+    else{
+      var a=mPending.p, geo=new THREE.BufferGeometry().setFromPoints([a,pt]), line=new THREE.Line(geo,mLineMat);
+      line.renderOrder=999; mGroup.add(line); mDot(pt);
+      var el=document.createElement('div'); el.className='mlbl'; el.textContent=fmtM(a.distanceTo(pt));
+      lblBox.appendChild(el); mItems.push({a:a,b:pt,el:el}); mPending=null;
+      document.getElementById('tClear').hidden=false;
+    }
+    dirty=true;
+  }
+  canvas.addEventListener('pointerdown',function(e){ if(measureOn) mDown={x:e.clientX,y:e.clientY}; },{capture:true});
+  canvas.addEventListener('pointerup',function(e){
+    if(!measureOn||!mDown) return;
+    var moved=Math.hypot(e.clientX-mDown.x,e.clientY-mDown.y); mDown=null;
+    if(moved<6){ if(mode==='walk') e.stopImmediatePropagation(); measurePick(e); }   // in orbita l'evento serve ai comandi
+  },{capture:true});
+
   // ---- comandi: orbita e passeggiata
   var orbit=new THREE.OrbitControls(camera,canvas);
   orbit.enableDamping=true; orbit.dampingFactor=0.08; orbit.maxPolarAngle=Math.PI*0.495; orbit.minDistance=1.5; orbit.maxDistance=80;
@@ -517,7 +658,7 @@ function initThree(){
   function setMode(m){
     mode=m; orbit.enabled=(m==='orbit');
     document.getElementById('tWalk').classList.toggle('on',m==='walk');
-    document.getElementById('hint').textContent=m==='walk'
+    if(!measureOn) document.getElementById('hint').textContent=m==='walk'
       ?'Trascina per guardarti intorno · tocca il pavimento per camminare · tasti W A S D'
       :'Trascina per ruotare · pizzica o rotella per zoomare · trascina la persona per spostarla';
     if(m==='orbit') document.getElementById('roomInfo').hidden=true;
@@ -598,8 +739,14 @@ function initThree(){
   var lblBox=document.getElementById('labels');
   var lbls=ROOMS.map(function(r){var d=document.createElement('div');d.className='lbl';d.innerHTML='<b>'+r[0]+'</b><span>'+r[3]+'</span>';lblBox.appendChild(d);return {el:d,p:new THREE.Vector3(r[1],1.2,r[2])};});
   var tmp=new THREE.Vector3();
+  var mid=new THREE.Vector3();
   function placeLabels(){
     var show=labelsOn&&mode==='orbit'&&!roofOn, w=canvas.clientWidth, h=canvas.clientHeight;
+    mItems.forEach(function(it){
+      mid.copy(it.a).add(it.b).multiplyScalar(0.5).project(camera);
+      var vis=mid.z<1&&Math.abs(mid.x)<1.1&&Math.abs(mid.y)<1.1;
+      it.el.hidden=!vis; if(vis){it.el.style.left=((mid.x+1)/2*w)+'px';it.el.style.top=((1-mid.y)/2*h)+'px';}
+    });
     lbls.forEach(function(l){
       if(!show){l.el.hidden=true;return;}
       tmp.copy(l.p).project(camera);
