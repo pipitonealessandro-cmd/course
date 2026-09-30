@@ -894,7 +894,7 @@ def add_exterior(M):
     # giardino posteriore (disegno di Alex): pavimentato dietro il garage fino a 1 m dal muro di fondo,
     # passaggio largo 1 m lungo il retro della zona notte e lungo il fianco destro fino al bagno grande
     lawn([(3.95, x1, 19.85, 20.15),
-          (x0, 0.0, y0, -2.1), (0.0, x1, y0, -1.0), (8.1, x1, -1.0, 4.5)])
+          (x0, 0.0, y0, -2.1), (0.0, x1, y0, -1.0)])
     # marciapiede perimetrale e piazzale
     box("paving", -3.8, 4.0, 11.15, 12.35, GROUND - 0.02, GROUND + 0.02)      # fronte garage/camera
     box("paving", 2.9, 4.0, 12.35, 18.75, GROUND - 0.02, GROUND + 0.02)       # lungo la facciata d'ingresso
@@ -909,8 +909,8 @@ def add_exterior(M):
         box("plaster_ext", bx[0], bx[1], bx[2], bx[3], GROUND, GROUND + 0.35)
     box("bark", 4.27, 8.7, 20.27, y1, GROUND, GROUND + 0.28)
     box("paving", x0, 0.0, -2.1, 5.25, GROUND - 0.02, GROUND + 0.02)          # dietro il garage
-    box("paving", 0.0, 8.1, -1.0, 0.0, GROUND - 0.02, GROUND + 0.02)          # passaggio lungo il retro (portoncino posteriore)
-    box("paving", 7.1, 8.1, 0.0, 4.5, GROUND - 0.02, GROUND + 0.02)           # passaggio sul fianco destro
+    box("paving", 0.0, x1, -1.0, 0.0, GROUND - 0.02, GROUND + 0.02)           # passaggio lungo il retro (portoncino posteriore)
+    box("paving", 7.1, x1, 0.0, 4.5, GROUND - 0.02, GROUND + 0.02)            # fianco destro, tutto pavimentato fino al bagno
     box("paving", 7.1, 8.7, 4.5, 5.5, GROUND - 0.02, GROUND + 0.02)           # porta finestra bagno grande
     # muri di confine: su strada (sud) h 1,20 con cancelli, laterali e retro h 1,80
     hs, hb = 1.2, 1.8
