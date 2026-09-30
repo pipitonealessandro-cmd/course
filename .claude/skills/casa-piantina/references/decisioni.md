@@ -107,7 +107,7 @@ modello e per non riproporre opzioni già scartate.
 
 1. Facciate **tortora**, infissi esterni **bianchi** (portoncino in noce con telaio bianco; cancelli e portone garage antracite).
 2. Cucina: **frigo in colonna nell'angolo verso la vetrata** + **colonna forno/microonde** accanto; basi, alzatina e pensili accorciati di conseguenza.
-3. Soggiorno: **credenza alta 180 x 40 x 200 cm** dietro il divano (ante verso il passaggio; restano ~1,5 m verso la vetrata).
+3. Soggiorno: **credenza alta 180 x 40 x 200 cm contro il muro NORD** (destro in piantina), tra lo schienale del divano e il muretto della vetrata (y 12,59-14,39), ante verso il soggiorno. (Prima versione, trasversale dietro il divano, corretta dall'utente.)
 4. Camera: **armadio sul muro della porta** (2,70 m, lascia libera l'anta); **letto 160 x 200 spostato di 45 cm verso la finestra**; sul muro di fronte al letto **armadio con vano TV** centrale (TV 43").
 5. Tra bagno grande e lavanderia: la porta diventa una **finestrella alta a vasistas** (h 1,80-2,25); la lavanderia si raggiunge solo dal corridoio.
 6. Bagno grande: l'apertura verso il retro è una **porta finestra** (luce naturale); **mobile sospeso 90 cm** con lavabo e specchio sotto il vasistas.

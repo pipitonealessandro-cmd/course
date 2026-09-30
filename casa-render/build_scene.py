@@ -1187,11 +1187,12 @@ def add_furniture():
                    (7.77, SY - 1.62), (8.40, SY - 1.62)):
         B("black_matte", px, py, 0.04, 0.04, 0.14)
     box("rug", 5.95, 8.20, 10.25, 12.35, 0.0, 0.012, bevel=0.004)
-    # credenza alta dietro il divano: 180 x 40 x 200 cm, ante verso il passaggio
-    box("black_matte", 6.40, 8.10, 12.55, 12.90, 0.0, 0.08)
+    # credenza alta 180 x 40 x 200 cm contro il muro nord (destro in piantina), tra lo schienale
+    # del divano (y 12,50) e il muretto della vetrata (y 14,45); ante verso il soggiorno
+    box("black_matte", 8.10, 8.43, 12.62, 14.36, 0.0, 0.08)
     for i in range(4):
-        xa = 6.35 + i * 0.45
-        box("walnut", xa + 0.002, xa + 0.448, 12.53, 12.93, 0.08, 2.00, bevel=0.003)
+        ya = 12.59 + i * 0.45
+        box("walnut", 8.05, 8.45, ya + 0.002, ya + 0.448, 0.08, 2.00, bevel=0.003)
     potted_plant(4.85, 11.75, 1.6, seed=13)
     # lampada da terra ad arco accanto al divano
     box("black_matte", 5.60, 5.85, SY - 0.35, SY - 0.10, 0.0, 0.03)
@@ -1356,7 +1357,7 @@ CAMERAS = {
     # nome: (posizione pianta x,y,z), (target x,y,z), lente mm, esposizione
     "ext_ingresso": ((-2.4, 20.8, 1.6), (3.6, 12.6, 1.5), 20, -0.25),
     "ext_aerea": ((-11.5, 30.5, 12.5), (3.0, 10.0, 0.5), 28, -0.25),
-    "int_soggiorno": ((5.3, 13.45, 1.45), (7.3, 9.9, 1.05), 17, 1.7),
+    "int_soggiorno": ((4.75, 14.15, 1.45), (7.6, 9.9, 1.05), 17, 1.7),
     "int_divano": ((5.15, 9.95, 1.35), (7.3, 13.9, 0.95), 16, 1.7),
     "int_cucina": ((7.45, 17.45, 1.5), (4.5, 15.0, 1.0), 16, 1.5),
     "ext_retro": ((-3.4, -2.8, 1.65), (3.5, 3.0, 1.3), 18, -0.25),

@@ -484,7 +484,7 @@ function initThree(){
     var hit=new THREE.Mesh(new THREE.CylinderGeometry(0.34,0.34,1.75,12),new THREE.MeshBasicMaterial({visible:false}));
     hit.position.y=0.875; person.add(hit); personParts.push(hit);
   })();
-  person.position.set(5.3,0,13.3);
+  person.position.set(6.6,0,10.4);
   scene.add(person);
   var personOn=true, dragPerson=false, groundHit=null;
   document.getElementById('tPerson').onclick=function(){personOn=!personOn;person.visible=personOn;this.classList.toggle('on',personOn);dirty=true;};
