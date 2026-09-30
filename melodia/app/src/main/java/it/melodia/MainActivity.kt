@@ -17,7 +17,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.LibraryMusic
+import androidx.compose.material.icons.filled.LibraryMusic
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
@@ -95,7 +95,7 @@ private data class Tab(val route: String, val label: String, val icon: androidx.
 private val TABS = listOf(
     Tab(Routes.HOME, "Home", Icons.Default.Home),
     Tab(Routes.SEARCH, "Cerca", Icons.Default.Search),
-    Tab(Routes.LIBRARY, "La tua libreria", Icons.AutoMirrored.Filled.LibraryMusic),
+    Tab(Routes.LIBRARY, "La tua libreria", Icons.Default.LibraryMusic),
 )
 
 @Composable
