@@ -70,7 +70,9 @@ section.view{position:absolute;inset:0}
 .lbl span{display:block;font:500 10.5px var(--mono);color:var(--muted)}
 
 .status{position:absolute;inset:0;z-index:1;display:grid;place-items:center;text-align:center;padding:24px;color:var(--muted);font-size:14px}
-.status p{max-width:34ch;margin:0;line-height:1.5}
+.status p{max-width:34ch;margin:0 auto;line-height:1.5}
+.status .detail{margin-top:10px;font:12px var(--mono);color:var(--muted);word-break:break-word}
+.status .chip{margin-top:12px;pointer-events:auto}
 .status .bar{width:180px;height:3px;background:var(--line);border-radius:3px;margin:12px auto 0;overflow:hidden}
 .status .bar i{display:block;height:100%;width:0;background:var(--oak);transition:width .2s}
 
@@ -114,7 +116,7 @@ figcaption b{color:var(--ink);font-weight:650;margin-right:6px}
     <section class="view" id="v3d">
       <canvas id="three" tabindex="0" aria-label="Modello 3D della casa"></canvas>
       <div class="labels" id="labels"></div>
-      <div class="status" id="status"><div><p id="statusText">Carico il modello della casa…</p><div class="bar"><i id="bar"></i></div></div></div>
+      <div class="status" id="status"><div><p id="statusText">Carico il modello della casa…</p><div class="bar"><i id="bar"></i></div><p id="statusDetail" class="detail" hidden></p><button class="chip" id="retry" hidden>Riprova</button></div></div>
       <div class="compass" id="compass" title="Nord reale" aria-label="Bussola"><svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="18"/><path class="n" d="M20 5 L25 20 L15 20 Z"/><path class="s" d="M20 35 L25 20 L15 20 Z"/><text x="20" y="4.5">N</text></svg></div>
       <div class="room" id="roomInfo" hidden><b id="roomName"></b><span id="roomDim"></span></div>
       <div class="dock">
@@ -234,21 +236,29 @@ function getModel(onLoad,onProgress,onErr){
   if(MODEL.busy) return;
   MODEL.busy=true;
   function fail(e){MODEL.busy=false;var c=MODEL.cbs;MODEL.cbs=[];c.forEach(function(x){x.err(e);});}
-  if(!window.THREE||!THREE.GLTFLoader){fail();return;}
-  var xhr=new XMLHttpRequest(); xhr.open('GET','casa.json'); xhr.responseType='json';
-  xhr.onprogress=function(x){ if(onProgress&&x.total) onProgress(x.loaded/x.total); };
-  xhr.onload=function(){
-    if(xhr.status&&xhr.status!==200||!xhr.response){fail();return;}
+  if(!window.THREE||!THREE.GLTFLoader){fail('libreria three.js non caricata');return;}
+  function build(json){
     try{
-      new THREE.GLTFLoader().parse(toGLB(xhr.response),'',function(g){
+      new THREE.GLTFLoader().parse(toGLB(json),'',function(g){
         var r=g.scene; r.updateMatrixWorld(true);
         r.traverse(function(o){ if(o.isMesh) o.userData.mat=o.material&&o.material.name; });
         MODEL.root=r; MODEL.busy=false;
         var c=MODEL.cbs; MODEL.cbs=[]; c.forEach(function(x){x.ok(r);});
-      },fail);
-    }catch(e){fail(e);}
+      },function(e){fail('lettura del modello: '+((e&&e.message)||e));});
+    }catch(e){fail('lettura del modello: '+e.message);}
+  }
+  function viaFetch(why){
+    if(!window.fetch){fail(why);return;}
+    fetch('casa.json').then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
+      .then(build).catch(function(e){ fail(why+' / fetch: '+e.message); });
+  }
+  var xhr=new XMLHttpRequest(); xhr.open('GET','casa.json'); xhr.responseType='json';
+  xhr.onprogress=function(x){ if(onProgress&&x.total) onProgress(x.loaded/x.total); };
+  xhr.onload=function(){
+    if(xhr.status&&xhr.status!==200||!xhr.response){viaFetch('download HTTP '+xhr.status);return;}
+    build(xhr.response);
   };
-  xhr.onerror=fail; xhr.send();
+  xhr.onerror=function(){viaFetch('download non riuscito');}; xhr.send();
 }
 function fmtM(d){return d.toFixed(2).replace('.',',')+' m';}
 
@@ -410,20 +420,28 @@ var three=null;
 function hasWebGL(){
   try{var c=document.createElement('canvas');return !!(window.WebGLRenderingContext&&(c.getContext('webgl2')||c.getContext('webgl')));}catch(e){return false;}
 }
-function fail(msg){
+function fail(msg,detail){
   document.getElementById('statusText').textContent=msg;
   document.querySelector('#status .bar').hidden=true;
+  var d=document.getElementById('statusDetail');
+  if(detail){d.textContent='Dettaglio: '+detail;d.hidden=false;}
+  document.getElementById('retry').hidden=false;
   document.getElementById('status').hidden=false;
 }
+document.getElementById('retry').onclick=function(){ location.reload(); };
+window.addEventListener('error',function(e){
+  if(!document.getElementById('status').hidden&&!MODEL.root) fail('Il modello 3D si è bloccato durante il caricamento.',(e.message||'errore')+(e.lineno?' (riga '+e.lineno+')':''));
+});
 
 function initThree(){
-  if(!window.THREE||!THREE.GLTFLoader||!THREE.OrbitControls){fail('Non riesco a caricare il motore 3D. Controlla la connessione e ricarica la pagina, oppure usa il Tour 360°.');return;}
-  if(!hasWebGL()){fail('Questo dispositivo non supporta la grafica 3D (WebGL). Il Tour 360° e i Render funzionano lo stesso.');return;}
+  if(!window.THREE||!THREE.GLTFLoader||!THREE.OrbitControls){fail('Non riesco a scaricare il motore 3D (three.js). Controlla la connessione e premi Riprova, oppure usa il Tour 360°.','cdn.jsdelivr.net non raggiungibile');return;}
+  if(!hasWebGL()){fail('Questo dispositivo o questa app non permette la grafica 3D (WebGL). Prova ad aprire il link da Chrome o Safari. Il Tour 360° e i Render funzionano lo stesso.','WebGL non disponibile');return;}
   if(THREE.ColorManagement) THREE.ColorManagement.legacyMode=false;
   var canvas=document.getElementById('three');
   var renderer;
-  try{renderer=new THREE.WebGLRenderer({canvas:canvas,antialias:true,powerPreference:'high-performance'});}
-  catch(e){fail('Non riesco ad avviare la grafica 3D su questo dispositivo. Il Tour 360° e i Render funzionano lo stesso.');return;}
+  try{renderer=new THREE.WebGLRenderer({canvas:canvas,antialias:true});}
+  catch(e){ try{renderer=new THREE.WebGLRenderer({canvas:canvas,antialias:false});}
+    catch(e2){fail('Non riesco ad avviare la grafica 3D su questo dispositivo. Prova ad aprire il link da Chrome o Safari. Il Tour 360° e i Render funzionano lo stesso.',e2.message);return;} }
   var mobile=Math.min(screen.width,screen.height)<700;
   renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,mobile?1.75:2));
   renderer.outputEncoding=THREE.sRGBEncoding;
@@ -540,7 +558,9 @@ function initThree(){
     addGarden();
     document.getElementById('status').hidden=true;
     setView('esterno',true);
-  },function(f){ bar.style.width=(90*f)+'%'; },function(){fail('Il modello non si è caricato. Ricarica la pagina; se il problema resta, usa il Tour 360°.');});
+  },function(f){ bar.style.width=(90*f)+'%'; document.getElementById('statusText').textContent=f<1?'Scarico il modello della casa… '+Math.round(f*100)+'%':'Preparo il modello…'; },
+  function(e){fail('Il modello non si è caricato. Premi Riprova; se il problema resta, usa il Tour 360°.',String(e||''));});
+  setTimeout(function(){ if(!MODEL.root&&!document.getElementById('status').hidden){ document.getElementById('statusDetail').textContent='Il caricamento è lento: attendi ancora qualche secondo o premi Riprova.'; document.getElementById('statusDetail').hidden=false; document.getElementById('retry').hidden=false; } },20000);
 
   // ---- giardino: prato, siepi e alberi semplificati (quelli dei render hanno foglie vere)
   function addGarden(){
