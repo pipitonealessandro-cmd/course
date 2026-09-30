@@ -38,7 +38,8 @@ button:focus-visible,.chip:focus-visible{outline:2px solid var(--oak);outline-of
 
 main{position:relative;flex:1;min-height:0}
 section.view{position:absolute;inset:0}
-#three{position:absolute;inset:0;display:block;width:100%;height:100%;touch-action:none;outline:none}
+#three,#flat{position:absolute;inset:0;display:block;width:100%;height:100%;touch-action:none;outline:none}
+#flatDock{z-index:2}
 
 .dock{position:absolute;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:8px;pointer-events:none}
 .row{display:flex;gap:6px;flex-wrap:wrap;pointer-events:auto}
@@ -115,6 +116,7 @@ figcaption b{color:var(--ink);font-weight:650;margin-right:6px}
     <!-- MODELLO 3D -->
     <section class="view" id="v3d">
       <canvas id="three" tabindex="0" aria-label="Modello 3D della casa"></canvas>
+      <canvas id="flat" tabindex="0" aria-label="Modello 3D semplificato della casa" hidden></canvas>
       <div class="labels" id="labels"></div>
       <div class="status" id="status"><div><p id="statusText">Carico il modello della casa…</p><div class="bar"><i id="bar"></i></div><p id="statusDetail" class="detail" hidden></p><button class="chip" id="retry" hidden>Riprova</button></div></div>
       <div class="compass" id="compass" title="Nord reale" aria-label="Bussola"><svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="18"/><path class="n" d="M20 5 L25 20 L15 20 Z"/><path class="s" d="M20 35 L25 20 L15 20 Z"/><text x="20" y="4.5">N</text></svg></div>
@@ -129,8 +131,19 @@ figcaption b{color:var(--ink);font-weight:650;margin-right:6px}
           <button class="chip toggle on" id="tPerson">Persona 1,75 m</button>
           <button class="chip toggle" id="tMeasure">Misura</button>
           <button class="chip" id="tClear" hidden>Cancella misure</button>
+          <button class="chip" id="tSimple">Modalità semplice</button>
         </div>
       </div>
+      <div class="dock" id="flatDock" hidden>
+        <div class="hint" id="flatHint">Modalità semplice (senza WebGL) · trascina per ruotare · pizzica o rotella per zoomare</div>
+        <div class="row">
+          <button class="chip on" id="fExt">Esterno</button>
+          <button class="chip" id="fTop">Interni dall'alto</button>
+          <button class="chip toggle on" id="fRoof">Tetto</button>
+          <button class="chip toggle on" id="fLab">Nomi e misure</button>
+          <button class="chip" id="fBack">Prova il 3D completo</button>
+        </div>
+    </div>
     </section>
 
     <!-- TOUR 360 -->
@@ -210,7 +223,7 @@ var RENDERS=[
   ['ext_ingresso','Ingresso','facciata sud: portoncino e porta finestra della cucina'],
   ['ext_aerea','Vista aerea','lotto 25 × 12,5 m con muri di confine'],
   ['ext_retro','Giardino posteriore','retro della zona notte e del garage'],
-  ['ext_entrata','Portoncino','finestra del soggiorno, portoncino e feritoie dell'ingresso'],
+  ['ext_entrata','Portoncino','finestra del soggiorno, portoncino e feritoie dell’ingresso'],
   ['int_ingresso','Ingresso','scarpiera sotto le feritoie, specchio e portoncino'],
   ['int_soggiorno','Soggiorno','divano Tosaro, parete attrezzata, porta scorrevole in vetro'],
   ['int_divano','Soggiorno','verso la vetrata telescopica della cucina'],
@@ -273,6 +286,7 @@ function show(id){
   tabs.forEach(function(b){b.setAttribute('aria-selected',String(b.dataset.view===id));});
   ['v3d','v360','vgal'].forEach(function(v){document.getElementById(v).hidden=(v!==id);});
   if(id==='v3d'&&three) three.resize();
+  if(id==='v3d') simple.resize();
   if(id==='v360') pano.open(pano.cur||PANOS[0].id);
   if(id==='vgal') gallery();
   try{localStorage.setItem('casa-tab',id);}catch(e){}
@@ -418,6 +432,112 @@ var pano=(function(){
   return api;
 })();
 
+// ---------------------------------------------------------------- modello semplificato in canvas 2D (senza WebGL)
+// Scatole esportate da build_scene.py (--boxes), disegnate con l'algoritmo del pittore come il modello originale.
+var simple=(function(){
+  var cv=document.getElementById('flat'), ctx=cv.getContext('2d'), data=null, started=false, dirty=true;
+  var COL={plaster_int:[241,239,234],plaster_ext:[158,144,126],roof:[158,144,126],frame_w:[240,240,236],threshold:[184,178,168],
+    door_ext:[90,59,37],steel:[201,203,205],garage:[44,46,49],oak:[196,154,110],oak_y:[196,154,110],bath_tile:[175,175,172],
+    concrete:[139,139,136],porcelain:[205,199,190],plinth:[59,59,58],ceiling:[244,243,240],paving:[168,161,150],bark:[70,55,40],
+    frame:[42,44,47],ceramic:[246,246,244],walnut:[94,63,39],lacquer_w:[236,235,231],lacquer:[200,193,182],black_matte:[27,27,27],
+    black_glass:[15,15,15],top_stone:[30,30,30],sofa:[168,148,128],sofa2:[138,119,102],chair:[94,84,74],tv:[12,12,12],
+    rug:[189,182,169],oak_furn:[163,123,82],linen:[220,216,207],drive:[125,117,106]};
+  var cam={tx:2.4,ty:0,tz:10,yaw:-0.55,pitch:0.62,dist:30}, roof=true, labels=true, FOV=50*Math.PI/180, NEAR=0.1;
+  var C,FW,RT,UP,F,vw=1,vh=1,dpr=1;
+  function setup(){
+    var cp=Math.cos(cam.pitch);
+    C=[cam.tx+cam.dist*cp*Math.sin(cam.yaw),cam.ty+cam.dist*Math.sin(cam.pitch),cam.tz+cam.dist*cp*Math.cos(cam.yaw)];
+    FW=[cam.tx-C[0],cam.ty-C[1],cam.tz-C[2]]; var l=Math.hypot(FW[0],FW[1],FW[2]); FW=[FW[0]/l,FW[1]/l,FW[2]/l];
+    RT=[-FW[2],0,FW[0]]; l=Math.hypot(RT[0],RT[2])||1; RT=[RT[0]/l,0,RT[2]/l];
+    UP=[-RT[2]*FW[1],RT[2]*FW[0]-RT[0]*FW[2],RT[0]*FW[1]]; F=(vh/2)/Math.tan(FOV/2);
+  }
+  function toCam(x,y,z){var a=x-C[0],b=y-C[1],c=z-C[2];return [a*RT[0]+c*RT[2],a*UP[0]+b*UP[1]+c*UP[2],a*FW[0]+b*FW[1]+c*FW[2]];}
+  function poly(pts,fill,stroke){
+    var p=pts.map(function(q){return toCam(q[0],q[1],q[2]);}), out=[], n=p.length;
+    for(var i=0;i<n;i++){var a=p[i],b=p[(i+1)%n],ia=a[2]>=NEAR,ib=b[2]>=NEAR; if(ia) out.push(a);
+      if(ia!==ib){var t=(NEAR-a[2])/(b[2]-a[2]);out.push([a[0]+t*(b[0]-a[0]),a[1]+t*(b[1]-a[1]),NEAR]);}}
+    if(out.length<3) return;
+    ctx.beginPath(); out.forEach(function(q,i){var sx=vw/2+F*q[0]/q[2], sy=vh/2-F*q[1]/q[2]; if(i) ctx.lineTo(sx,sy); else ctx.moveTo(sx,sy);});
+    ctx.closePath(); ctx.fillStyle=fill; ctx.fill(); if(stroke){ctx.strokeStyle=stroke;ctx.stroke();}
+  }
+  var L=[-0.55,0.72,0.42]; (function(){var l=Math.hypot(L[0],L[1],L[2]);L=[L[0]/l,L[1]/l,L[2]/l];})();
+  function rgb(c,n){var f=Math.min(1.08,0.62+0.5*Math.max(0,n[0]*L[0]+n[1]*L[1]+n[2]*L[2]));return 'rgb('+[0,1,2].map(function(i){return Math.min(255,c[i]*f|0);}).join(',')+')';}
+  function draw(){
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    var g=ctx.createLinearGradient(0,0,0,vh); g.addColorStop(0,'#9fbddc'); g.addColorStop(1,'#e6ece8'); ctx.fillStyle=g; ctx.fillRect(0,0,vw,vh);
+    setup(); ctx.lineJoin='round'; ctx.lineWidth=0.6;
+    poly([[-60,-0.13,-50],[70,-0.13,-50],[70,-0.13,80],[-60,-0.13,80]],'rgb(104,138,70)');
+    poly([[-3.8,-0.125,-3.1],[8.7,-0.125,-3.1],[8.7,-0.125,21.2],[-3.8,-0.125,21.2]],'rgb(92,128,58)');
+    data.polys.forEach(function(p){ var c=COL[data.mats[p[0]]]||[150,150,150]; poly(p[2].map(function(q){return [q[0]/100,p[1]/100,q[1]/100];}),rgb(c,[0,1,0])); });
+    var list=[];
+    data.boxes.forEach(function(b){
+      var m=data.mats[b[0]]; if(!roof&&(m==='roof'||m==='ceiling')) return;
+      var x0=b[1]/100,x1=b[2]/100,z0=b[3]/100,z1=b[4]/100,y0=b[5]/100,y1=b[6]/100;
+      var cx=(x0+x1)/2-C[0], cy=(y0+y1)/2-C[1], cz=(z0+z1)/2-C[2];
+      list.push({m:m,x0:x0,x1:x1,y0:y0,y1:y1,z0:z0,z1:z1,d:cx*cx+cy*cy+cz*cz});
+    });
+    list.sort(function(a,b){return b.d-a.d;});
+    list.forEach(function(b){
+      var c=COL[b.m]||[150,150,150], st='rgba(40,40,40,.15)';
+      if(C[0]<b.x0) poly([[b.x0,b.y0,b.z0],[b.x0,b.y0,b.z1],[b.x0,b.y1,b.z1],[b.x0,b.y1,b.z0]],rgb(c,[-1,0,0]),st);
+      if(C[0]>b.x1) poly([[b.x1,b.y0,b.z0],[b.x1,b.y0,b.z1],[b.x1,b.y1,b.z1],[b.x1,b.y1,b.z0]],rgb(c,[1,0,0]),st);
+      if(C[2]<b.z0) poly([[b.x0,b.y0,b.z0],[b.x1,b.y0,b.z0],[b.x1,b.y1,b.z0],[b.x0,b.y1,b.z0]],rgb(c,[0,0,-1]),st);
+      if(C[2]>b.z1) poly([[b.x0,b.y0,b.z1],[b.x1,b.y0,b.z1],[b.x1,b.y1,b.z1],[b.x0,b.y1,b.z1]],rgb(c,[0,0,1]),st);
+      if(C[1]>b.y1) poly([[b.x0,b.y1,b.z0],[b.x1,b.y1,b.z0],[b.x1,b.y1,b.z1],[b.x0,b.y1,b.z1]],rgb(c,[0,1,0]),st);
+    });
+    if(labels&&!roof){
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      ROOMS.forEach(function(r){
+        var q=toCam(r[1],1.2,r[2]); if(q[2]<NEAR) return;
+        var sx=vw/2+F*q[0]/q[2], sy=vh/2-F*q[1]/q[2];
+        ctx.font='600 12px system-ui,sans-serif'; var w=Math.max(ctx.measureText(r[0]).width,ctx.measureText(r[3]).width*0.92)+14;
+        ctx.fillStyle='rgba(248,248,246,.9)'; ctx.fillRect(sx-w/2,sy-17,w,34);
+        ctx.fillStyle='#1d2023'; ctx.fillText(r[0],sx,sy-7); ctx.font='500 11px ui-monospace,monospace'; ctx.fillStyle='#626a70'; ctx.fillText(r[3],sx,sy+8);
+      });
+    }
+  }
+  function resize(){var w=cv.clientWidth,h=cv.clientHeight; if(!w||!h) return; dpr=Math.min(window.devicePixelRatio||1,2); vw=w; vh=h; cv.width=Math.round(w*dpr); cv.height=Math.round(h*dpr); dirty=true;}
+  var ptrs={},n=0;
+  cv.addEventListener('pointerdown',function(e){try{cv.setPointerCapture(e.pointerId);}catch(_){} if(!ptrs[e.pointerId]) n++; ptrs[e.pointerId]={x:e.clientX,y:e.clientY};});
+  cv.addEventListener('pointermove',function(e){
+    var p=ptrs[e.pointerId]; if(!p) return; var dx=e.clientX-p.x, dy=e.clientY-p.y;
+    if(n===1){cam.yaw-=dx*0.006;cam.pitch=Math.max(0.05,Math.min(1.5,cam.pitch+dy*0.006));}
+    else{ var o=null; for(var id in ptrs) if(String(id)!==String(e.pointerId)){o=ptrs[id];break;}
+      if(o){var d0=Math.hypot(p.x-o.x,p.y-o.y),d1=Math.hypot(e.clientX-o.x,e.clientY-o.y); if(d0>10&&d1>10) cam.dist=Math.max(3,Math.min(80,cam.dist*d0/d1));}
+      var s=cam.dist/F, fl=Math.hypot(FW[0],FW[2])||1; cam.tx-=(RT[0]*dx-FW[0]/fl*dy)*s/2; cam.tz-=(RT[2]*dx-FW[2]/fl*dy)*s/2; }
+    p.x=e.clientX; p.y=e.clientY; dirty=true;
+  });
+  function up(e){ if(ptrs[e.pointerId]){delete ptrs[e.pointerId];n--;} }
+  cv.addEventListener('pointerup',up); cv.addEventListener('pointercancel',up);
+  cv.addEventListener('wheel',function(e){e.preventDefault();cam.dist=Math.max(3,Math.min(80,cam.dist*Math.exp(e.deltaY*0.001)));dirty=true;},{passive:false});
+  function view(k){
+    document.getElementById('fExt').classList.toggle('on',k==='ext'); document.getElementById('fTop').classList.toggle('on',k==='top');
+    if(k==='ext'){cam={tx:2.4,ty:0,tz:12,yaw:-0.62,pitch:0.42,dist:26};setRoof(true);}
+    else{cam={tx:2.4,ty:0,tz:9.5,yaw:0,pitch:1.1,dist:30};setRoof(false);}
+    dirty=true;
+  }
+  function setRoof(v){roof=v;document.getElementById('fRoof').classList.toggle('on',v);dirty=true;}
+  document.getElementById('fExt').onclick=function(){view('ext');};
+  document.getElementById('fTop').onclick=function(){view('top');};
+  document.getElementById('fRoof').onclick=function(){setRoof(!roof);};
+  document.getElementById('fLab').onclick=function(){labels=!labels;this.classList.toggle('on',labels);dirty=true;};
+  document.getElementById('fBack').onclick=function(){ try{localStorage.removeItem('casa-simple');}catch(e){} location.reload(); };
+  function loop(){ requestAnimationFrame(loop); if(current!=='v3d'||!data) return; if(dirty){dirty=false;draw();} }
+  function start(reason){
+    if(started) return; started=true;
+    ['three','labels','status'].forEach(function(id){var el=document.getElementById(id); if(el) el.hidden=true;});
+    document.querySelector('#v3d > .dock:not(#flatDock)').hidden=true;
+    document.querySelectorAll('#v3d .compass, #v3d .room').forEach(function(el){el.hidden=true;});
+    cv.hidden=false; document.getElementById('flatDock').hidden=false;
+    if(reason) document.getElementById('flatHint').textContent='Modalità semplice (senza WebGL: '+reason+') · trascina per ruotare · pizzica per zoomare';
+    window.addEventListener('resize',resize); resize();
+    var xhr=new XMLHttpRequest(); xhr.open('GET','boxes.json'); xhr.responseType='json';
+    xhr.onload=function(){ data=xhr.response; if(!data){document.getElementById('flatHint').textContent='Non riesco a caricare il modello semplificato. Usa il Tour 360°.';return;} view('ext'); };
+    xhr.send(); requestAnimationFrame(loop);
+  }
+  return {start:start, resize:resize};
+})();
+
 // ---------------------------------------------------------------- modello 3D (three.js)
 var three=null;
 function hasWebGL(){
@@ -432,19 +552,24 @@ function fail(msg,detail){
   document.getElementById('status').hidden=false;
 }
 document.getElementById('retry').onclick=function(){ location.reload(); };
+document.getElementById('tSimple').onclick=function(){ try{localStorage.setItem('casa-simple','1');}catch(e){} simple.start(''); };
 window.addEventListener('error',function(e){
   if(!document.getElementById('status').hidden&&!MODEL.root) fail('Il modello 3D si è bloccato durante il caricamento.',(e.message||'errore')+(e.lineno?' (riga '+e.lineno+')':''));
 });
 
 function initThree(){
-  if(!window.THREE||!THREE.GLTFLoader||!THREE.OrbitControls){fail('Non riesco a scaricare il motore 3D (three.js). Controlla la connessione e premi Riprova, oppure usa il Tour 360°.','file lib/three.min.js non caricato');return;}
-  if(!hasWebGL()){fail('Questo dispositivo o questa app non permette la grafica 3D (WebGL). Prova ad aprire il link da Chrome o Safari. Il Tour 360° e i Render funzionano lo stesso.','WebGL non disponibile');return;}
+  if(!window.THREE||!THREE.GLTFLoader||!THREE.OrbitControls){simple.start('motore 3D non caricato');return;
+    fail('Non riesco a scaricare il motore 3D (three.js). Controlla la connessione e premi Riprova, oppure usa il Tour 360°.','file lib/three.min.js non caricato');return;}
+  if(!hasWebGL()){simple.start('WebGL non disponibile');return;
+    fail('Questo dispositivo o questa app non permette la grafica 3D (WebGL). Prova ad aprire il link da Chrome o Safari. Il Tour 360° e i Render funzionano lo stesso.','WebGL non disponibile');return;}
   if(THREE.ColorManagement) THREE.ColorManagement.legacyMode=false;
   var canvas=document.getElementById('three');
+  canvas.addEventListener('webglcontextlost',function(e){ e.preventDefault(); simple.start('grafica 3D interrotta dal telefono'); });
   var renderer;
   try{renderer=new THREE.WebGLRenderer({canvas:canvas,antialias:true});}
   catch(e){ try{renderer=new THREE.WebGLRenderer({canvas:canvas,antialias:false});}
-    catch(e2){fail('Non riesco ad avviare la grafica 3D su questo dispositivo. Prova ad aprire il link da Chrome o Safari. Il Tour 360° e i Render funzionano lo stesso.',e2.message);return;} }
+    catch(e2){simple.start('WebGL non si avvia');return;
+      fail('Non riesco ad avviare la grafica 3D su questo dispositivo. Prova ad aprire il link da Chrome o Safari. Il Tour 360° e i Render funzionano lo stesso.',e2.message);return;} }
   var mobile=Math.min(screen.width,screen.height)<700;
   renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,mobile?1.75:2));
   renderer.outputEncoding=THREE.sRGBEncoding;
@@ -810,8 +935,9 @@ function initThree(){
   return {resize:resize};
 }
 
-three=initThree()||null;
+var wantSimple=false; try{wantSimple=localStorage.getItem('casa-simple')==='1';}catch(e){}
+if(wantSimple){ simple.start(''); three=null; } else three=initThree()||null;
 var saved=null; try{saved=localStorage.getItem('casa-tab');}catch(e){}
-if(!three&&!saved) show('v360'); else if(saved&&saved!=='v3d') show(saved);
+if(saved&&saved!=='v3d') show(saved);
 })();
 </script>

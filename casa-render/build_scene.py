@@ -29,6 +29,8 @@ def reset():
 
 
 _geo = {}   # (materiale, bevel) -> (verts, faces)
+BOXES = []  # elenco semplificato per il visore senza WebGL: (materiale, x0, x1, y0, y1, z0, z1)
+POLYS = []  # lastre poligonali: (materiale, punti, z1)
 
 
 def box(mat, x0, x1, y0, y1, z0, z1, bevel=0.0):
@@ -39,6 +41,7 @@ def box(mat, x0, x1, y0, y1, z0, z1, bevel=0.0):
         y0, y1 = y1, y0
     if x1 - x0 < 1e-4 or y1 - y0 < 1e-4 or z1 - z0 < 1e-4:
         return
+    BOXES.append((mat, x0, x1, y0, y1, z0, z1))
     X0, X1, Y0, Y1 = x0, x1, -y1, -y0
     v, f = _geo.setdefault((mat, bevel), ([], []))
     o = len(v)
@@ -864,6 +867,7 @@ DRIVE = [(-3.8, 12.35), (0.3, 12.35), (2.42, 21.2), (-0.92, 21.2), (-3.4, 13.85)
 
 def slab(mat, pts, z0, z1):
     """Lastra poligonale (convessa) in coordinate di pianta."""
+    POLYS.append((mat, pts, z1))
     v, f = _geo.setdefault((mat, 0.0), ([], []))
     o = len(v)
     n = len(pts)
@@ -1435,6 +1439,27 @@ def build():
         add_camera(n, p, t, lens)
 
 
+SKIP_BOXES = {"grass", "led", "glass", "mirror"}
+
+
+def export_boxes(path):
+    """Scatole e lastre per il visore semplice in canvas 2D (senza WebGL), in centimetri."""
+    import json
+    mats = {}
+    out = []
+    for m, x0, x1, y0, y1, z0, z1 in BOXES:
+        if m in SKIP_BOXES:
+            continue
+        mi = mats.setdefault(m, len(mats))
+        out.append([mi] + [round(v * 100) for v in (x0, x1, y0, y1, z0, z1)])
+    polys = []
+    for m, pts, z1 in POLYS:
+        mi = mats.setdefault(m, len(mats))
+        polys.append([mi, round(z1 * 100), [[round(x * 100), round(y * 100)] for x, y in pts]])
+    with open(path, "w") as fh:
+        json.dump({"mats": sorted(mats, key=mats.get), "boxes": out, "polys": polys}, fh, separators=(",", ":"))
+
+
 NO_EXPORT = {"Foglie", "Siepe", "Siepe fitta", "Corteccia", "Prato", "Erba"}
 
 
@@ -1512,6 +1537,7 @@ def main():
     ap.add_argument("--out", default="renders")
     ap.add_argument("--save", default="")
     ap.add_argument("--glb", default="")
+    ap.add_argument("--boxes", default="")
     ap.add_argument("--panos", default="")
     ap.add_argument("--pano-size", type=int, default=768)
     a = ap.parse_args(argv)
@@ -1521,6 +1547,8 @@ def main():
         bpy.ops.wm.save_as_mainfile(filepath=os.path.abspath(a.save))
     if a.glb:
         export_glb(a.glb)
+    if a.boxes:
+        export_boxes(a.boxes)
     if a.panos:
         render_panos([p for p in a.panos.split(",") if p], a.pano_size, a.samples, a.out)
         return
