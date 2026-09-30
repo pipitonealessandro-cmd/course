@@ -481,7 +481,7 @@ def build_materials():
 # ---------------------------------------------------------------- muri
 
 TYPES = {"w": (0.9, 2.3), "w1": (1.0, 2.4), "wk": (1.1, 2.0), "wc": (1.00, 2.20),
-         "d": (0, 2.1), "wh": (1.80, 2.25), "g": (0, 2.4), "p": (0, 2.3), "wf": (1.20, 2.30), "wft": (0, 2.30), "sc": (0, 2.1)}
+         "d": (0, 2.1), "wh": (1.80, 2.25), "g": (0, 2.4), "p": (0, 2.3), "wf": (1.20, 2.30), "wft": (0.90, 2.30), "sc": (0, 2.1)}
 
 # [x1,y1,x2,y2,spessore,[[da,a,tipo],...], lato esterno (per perimetro) , estendi estremi]
 WALLS = [
@@ -1364,6 +1364,7 @@ CAMERAS = {
     "int_divano": ((5.15, 9.95, 1.35), (7.3, 13.9, 0.95), 16, 1.7),
     "int_cucina": ((7.45, 17.45, 1.5), (4.5, 15.0, 1.0), 16, 1.5),
     "ext_entrata": ((1.6, 16.2, 1.6), (4.0, 13.0, 1.4), 24, -0.25),
+    "int_luce": ((7.3, 14.0, 1.5), (4.3, 12.3, 0.55), 17, 1.4),
     "int_ingresso": ((6.4, 12.9, 1.55), (4.2, 13.9, 1.2), 18, 1.6),
     "ext_retro": ((-3.4, -2.8, 1.65), (3.5, 3.0, 1.3), 18, -0.25),
     "int_cucina2": ((4.6, 17.9, 1.55), (7.2, 14.6, 1.0), 16, 1.5),
@@ -1538,9 +1539,16 @@ def main():
     ap.add_argument("--save", default="")
     ap.add_argument("--glb", default="")
     ap.add_argument("--boxes", default="")
+    ap.add_argument("--sun", default="", help="azimut reale,altezza in gradi (es. 180,45 = mezzogiorno)")
+    ap.add_argument("--tag", default="", help="suffisso del nome file dei render")
     ap.add_argument("--panos", default="")
     ap.add_argument("--pano-size", type=int, default=768)
     a = ap.parse_args(argv)
+    if a.sun:
+        global SUN_AZ, SUN_EL
+        az_real, el = (float(v) for v in a.sun.split(","))
+        SUN_AZ = math.radians((az_real - 270) % 360)     # azimut reale -> sistema della piantina
+        SUN_EL = math.radians(el)
     build()
     setup_render(a.res, a.samples)
     if a.save:
@@ -1557,7 +1565,7 @@ def main():
         sc = bpy.context.scene
         sc.camera = bpy.data.objects[n]
         sc.view_settings.exposure = CAMERAS[n][3]
-        sc.render.filepath = os.path.abspath(os.path.join(a.out, n + ".jpg"))
+        sc.render.filepath = os.path.abspath(os.path.join(a.out, n + a.tag + ".jpg"))
         bpy.ops.render.render(write_still=True)
         print("RENDERED", sc.render.filepath, flush=True)
 

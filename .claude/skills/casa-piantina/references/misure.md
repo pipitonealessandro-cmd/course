@@ -45,9 +45,9 @@ In metri, coordinata Y lungo il muro (vedi assets per la X):
 - Finestra soggiorno: y 11,30–12,30 (1,00 m), davanzale 0,90 m, sommità 2,30 m (riportata alle misure originali
   dopo aver provato una vetrata a terra alta 2,50 e poi 2,10: scartate dall'utente)
 - **Feritoie dell'ingresso** (a destra del portoncino, vista da fuori), larghe 25 cm, sommità 2,30 m:
-  la prima (y 13,72–13,97) **da terra**, la seconda (y 14,12–14,37) con davanzale 1,20 sopra la scarpiera
-  120 x 28 lungo il muretto della vetrata.
-- Vetri del soggiorno (vano murario): finestra 1,40 + feritoie 0,575 + 0,275 = **2,25 m²** su 19,95 m² = 1/8,9
+  la prima (y 13,72–13,97) **alta come la finestra del soggiorno** (0,90–2,30), la seconda (y 14,12–14,37)
+  con davanzale 1,20 sopra la scarpiera 120 x 28 lungo il muretto della vetrata.
+- Vetri del soggiorno (vano murario): finestra 1,40 + feritoie 0,35 + 0,275 = **2,03 m²** su 19,95 m² = 1/9,9
   (minimo 1/8 = 2,49 m²; le feritoie contano solo se apribili)
 - Portoncino d'ingresso: y 12,60–13,60 (1,00 m), a terra, sommità 2,10 m
 - Porta finestra cucina: y 16,70–17,90 (1,20 m), a terra, sommità 2,30 m — **spostata dall'utente** (prima 16,05–17,25): 60 cm dall'angolo interno, a filo del fronte dei mobili del lavello
