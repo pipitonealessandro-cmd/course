@@ -891,10 +891,10 @@ def add_exterior(M):
     # terreno oltre il lotto
     box("grass", -60, 70, -60, 80, GROUND - 0.3, GROUND - 0.02)
     # prato del lotto (con fili d'erba)
+    # giardino posteriore (disegno di Alex): pavimentato dietro il garage fino a 1 m dal muro di fondo,
+    # passaggio largo 1 m lungo il retro della zona notte e lungo il fianco destro fino al bagno grande
     lawn([(3.95, x1, 19.85, 20.15),
-          (x0, x1, y0, -1.0), (x0, 2.8, -1.0, 0.0), (4.2, x1, -1.0, 0.0),
-          (x0, 0.0, 0.0, 4.25), (x0, -1.9, 4.25, 5.25), (-0.5, 0.0, 4.25, 5.25),
-          (7.1, x1, 0.0, 4.5)])
+          (x0, 0.0, y0, -2.1), (0.0, x1, y0, -1.0), (8.1, x1, -1.0, 4.5)])
     # marciapiede perimetrale e piazzale
     box("paving", -3.8, 4.0, 11.15, 12.35, GROUND - 0.02, GROUND + 0.02)      # fronte garage/camera
     box("paving", 2.9, 4.0, 12.35, 18.75, GROUND - 0.02, GROUND + 0.02)       # lungo la facciata d'ingresso
@@ -908,9 +908,10 @@ def add_exterior(M):
     for bx in ((4.15, 8.7, 20.15, 20.27), (4.15, 4.27, 20.15, y1)):
         box("plaster_ext", bx[0], bx[1], bx[2], bx[3], GROUND, GROUND + 0.35)
     box("bark", 4.27, 8.7, 20.27, y1, GROUND, GROUND + 0.28)
-    box("paving", 2.8, 4.2, -1.0, 0.0, GROUND - 0.02, GROUND + 0.02)          # uscita sul retro (disimpegno)
+    box("paving", x0, 0.0, -2.1, 5.25, GROUND - 0.02, GROUND + 0.02)          # dietro il garage
+    box("paving", 0.0, 8.1, -1.0, 0.0, GROUND - 0.02, GROUND + 0.02)          # passaggio lungo il retro (portoncino posteriore)
+    box("paving", 7.1, 8.1, 0.0, 4.5, GROUND - 0.02, GROUND + 0.02)           # passaggio sul fianco destro
     box("paving", 7.1, 8.7, 4.5, 5.5, GROUND - 0.02, GROUND + 0.02)           # porta finestra bagno grande
-    box("paving", -1.9, -0.5, 4.25, 5.25, GROUND - 0.02, GROUND + 0.02)       # porta posteriore garage
     # muri di confine: su strada (sud) h 1,20 con cancelli, laterali e retro h 1,80
     hs, hb = 1.2, 1.8
     # dalla piantina: carrabile 2,90 m, pilastro 0,50 m, pedonale 1,00 m (centro a ~7,2 m dal muro sinistro)
@@ -950,7 +951,6 @@ def add_exterior(M):
     # alberi (uno al centro del giardino come nella piantina, uno sul retro) + contesto fuori lotto
     tree(1.55, 15.2, h=4.6, r=1.5, seed=3)       # albero del giardino, come nella piantina
     tree(-2.7, 19.9, h=3.6, r=1.0, seed=6)       # al posto della palma, nell'aiuola a sinistra
-    tree(-2.2, 1.6, h=4.2, r=1.4, seed=4)
     tree(-2.6, 25.5, h=5.0, r=1.8, seed=5)
     tree(12.5, 8.0, h=6.0, r=2.4, seed=7)
     tree(-8.0, 3.0, h=6.5, r=2.6, seed=9)
