@@ -505,8 +505,8 @@ WALLS = [
     # garage e w.c. del garage
     [-3.675, 5.375, 0.0, 5.375, EXT, [[-3.40, -2.50, "wk"], [-1.65, -0.75, "d"]], "N"],
     [-3.675, 5.375, -3.675, 11.025, EXT, [], "W"],
-    [-1.80, 5.50, -1.80, 6.75, INT, [], None],
-    [-3.55, 6.75, -1.80, 6.75, INT, [[-3.40, -2.50, "d"]], None],
+    [-1.80, 5.50, -1.80, 6.75, INT, [[5.90, 6.60, "d"]], None],   # porta 70 cm del w.c. sul lato destro (piantina)
+    [-3.55, 6.75, -1.80, 6.75, INT, [], None],
     # blocco notte
     [2.90, 0.25, 2.90, 6.65, INT, [[0.65, 1.55, "d"], [2.55, 3.45, "d"], [5.65, 6.55, "d"]], None],
     [0.25, 1.80, 2.85, 1.80, INT, [], None],
@@ -1174,19 +1174,25 @@ def add_furniture():
     B("ceramic", 6.30, 6.90, 0.36, 0.45, 0.4, bevel=0.05)
     B("ceramic", 6.95, 7.00, 0.36, 0.55, 0.4, bevel=0.05)
     vanity(7.45, 8.35, 7.08, 7.55, "N")                                        # mobile 90 cm sotto il vasistas
-    # --- bagno piccolo: doccia in fondo sotto la finestra, sanitari e mobiletto
-    box("ceramic", 0.27, 1.25, 1.87, 3.53, 0.0, 0.04, bevel=0.01)              # piatto doccia 98 x 166
-    box("glass", 1.25, 1.27, 1.87, 2.93, 0.04, 2.00)                           # vetro fisso (ingresso 60 cm)
-    box("steel", 0.27, 0.30, 2.60, 2.64, 1.00, 2.05)                           # colonna doccia
-    box("steel", 0.27, 0.45, 2.52, 2.72, 2.03, 2.05)
+    # --- bagno piccolo: doccia 80 x 120 nell'angolo sotto la finestra, mobiletto accanto, sanitari
+    box("ceramic", 0.27, 1.07, 1.87, 3.07, 0.0, 0.04, bevel=0.01)              # piatto doccia 80 x 120
+    box("glass", 1.07, 1.09, 1.87, 2.47, 0.04, 2.00)                           # vetro fisso (ingresso 60 cm)
+    box("glass", 0.27, 1.09, 3.07, 3.09, 0.04, 2.00)                           # vetro di testa verso il mobiletto
+    box("steel", 0.27, 0.30, 2.00, 2.04, 1.00, 2.05)                           # colonna doccia
+    box("steel", 0.27, 0.45, 1.92, 2.12, 2.03, 2.05)
     B("ceramic", 1.45, 1.85, 0.36, 0.20, 0.8, bevel=0.03)                      # wc
     B("ceramic", 1.45, 2.05, 0.36, 0.45, 0.4, bevel=0.05)
     B("ceramic", 1.95, 1.85, 0.36, 0.55, 0.4, bevel=0.05)                      # bidet
-    vanity(1.35, 1.95, 3.10, 3.55, "S")                                        # mobiletto 60 cm
-    # --- w.c. garage
-    B("ceramic", -2.30, 5.50, 0.36, 0.20, 0.8, bevel=0.03)
-    B("ceramic", -2.30, 5.70, 0.36, 0.45, 0.4, bevel=0.05)
-    B("lacquer_w", -3.50, 5.55, 0.45, 0.50, 0.85, bevel=0.005)
+    vanity(0.35, 0.95, 3.12, 3.55, "S")                                        # mobiletto 60 cm accanto alla doccia
+    # --- w.c. garage: doccia 70 x 120 a sinistra, wc sul muro di fondo, lavamani; porta sul lato destro
+    box("ceramic", -3.53, -2.85, 5.52, 6.68, 0.0, 0.04, bevel=0.01)            # piatto doccia 70 x 120
+    box("glass", -2.85, -2.83, 5.52, 6.08, 0.04, 2.00)                         # vetro fisso (ingresso 60 cm)
+    box("steel", -3.55, -3.52, 6.20, 6.24, 1.00, 2.05)                         # colonna doccia
+    box("steel", -3.55, -3.37, 6.12, 6.32, 2.03, 2.05)
+    B("ceramic", -2.55, 5.50, 0.36, 0.20, 0.8, bevel=0.03)                     # wc
+    B("ceramic", -2.55, 5.70, 0.36, 0.45, 0.4, bevel=0.05)
+    box("ceramic", -2.62, -2.22, 6.45, 6.70, 0.80, 0.90, bevel=0.02)           # lavamani 40 cm
+    box("steel", -2.44, -2.40, 6.62, 6.66, 0.90, 1.05)
     # --- lavanderia
     B("lacquer_w", 7.85, 8.15, 0.6, 0.6, 0.85, bevel=0.01)
     B("lacquer_w", 7.85, 8.75, 0.6, 0.6, 0.85, bevel=0.01)
@@ -1561,8 +1567,9 @@ PANOS = {
     "lavanderia": (6.9, 8.2, 1.55),
     "corridoio": (3.5, 4.3, 1.55),
     "garage": (-1.8, 8.9, 1.55),
+    "wc_garage": (-2.15, 6.3, 1.55),
 }
-PANO_EXPOSURE = {"giardino": -0.25, "retro": -0.25, "garage": 2.8, "bagno_grande": 2.3, "bagno_piccolo": 2.1,
+PANO_EXPOSURE = {"giardino": -0.25, "retro": -0.25, "garage": 2.8, "bagno_grande": 2.3, "bagno_piccolo": 2.1, "wc_garage": 2.3,
                  "lavanderia": 2.3, "corridoio": 2.2, "studio": 1.8, "cameretta": 1.6, "studiolo": 1.9}
 # facce del cubo: (nome, direzione, "alto" dell'immagine) in coordinate Blender
 FACES = [("n", (0, 1, 0), (0, 0, 1)), ("e", (1, 0, 0), (0, 0, 1)), ("s", (0, -1, 0), (0, 0, 1)),
