@@ -464,6 +464,7 @@ def build_materials():
     M["oak_furn"] = mat_wood("Rovere mobili", (0.40, 0.27, 0.15), (0.55, 0.39, 0.23), rough=0.45)
     M["lacquer"] = mat_plain("Laccato greige", (0.62, 0.59, 0.54), rough=0.35)
     M["lacquer_w"] = mat_plain("Laccato bianco", (0.80, 0.79, 0.76), rough=0.3)
+    M["lacquer_t"] = mat_plain("Laccato tortora", (0.37, 0.30, 0.24), rough=0.35)   # armadi
     M["top_stone"] = mat_stone("Top gres scuro", (0.03, 0.03, 0.03), (0.09, 0.09, 0.09), rough=0.28, scale=3)
     M["ceramic"] = mat_plain("Ceramica", (0.85, 0.85, 0.84), rough=0.08, coat=0.5)
     M["steel"] = mat_plain("Acciaio", (0.75, 0.75, 0.75), rough=0.25, metal=1.0)
@@ -1095,6 +1096,22 @@ def bed(x, y, w, d, head, headboard=False):
         box("linen", x + 0.08, x + w - 0.08, y + d - 0.50, y + d - 0.06, 0.52, 0.66, bevel=0.06)
 
 
+def bunk(x, y, w=0.90, d=2.00, head="S"):
+    """Letto a castello 90 x 200: letto sotto, rete sopra a 1,35 m con sponda, montanti e scaletta ai piedi."""
+    bed(x, y, w, d, head)
+    for px in (x, x + w - 0.06):
+        for py in (y, y + d - 0.06):
+            box("walnut", px, px + 0.06, py, py + 0.06, 0.0, 1.85, bevel=0.004)
+    box("walnut", x, x + w, y, y + d, 1.30, 1.42, bevel=0.005)                    # telaio superiore
+    box("linen", x + 0.02, x + w - 0.02, y + 0.02, y + d - 0.02, 1.42, 1.60, bevel=0.05)
+    box("linen", x + 0.08, x + w - 0.08, y + 0.06, y + 0.50, 1.60, 1.72, bevel=0.06)   # cuscino
+    box("walnut", x - 0.02, x, y, y + d - 0.55, 1.62, 1.80, bevel=0.003)            # sponda (lato libero)
+    for k in range(4):                                                              # scaletta ai piedi
+        zz = 0.35 + k * 0.30
+        box("walnut", x - 0.03, x, y + d - 0.50, y + d - 0.06, zz, zz + 0.03)
+    box("walnut", x - 0.03, x, y + d - 0.53, y + d - 0.50, 0.0, 1.85)
+
+
 def desk(x0, x1, y0, y1, along="y"):
     """Scrivania in rovere con due fianchi."""
     box("oak_furn", x0, x1, y0, y1, 0.72, 0.75, bevel=0.003)
@@ -1124,10 +1141,10 @@ def vanity(x0, x1, y0, y1, wall):
 def tv_wardrobe(x0, x1, y0, y1, yc, niche=1.10):
     """Armadio a parete con vano a giorno al centro per la TV (ante verso -x)."""
     a, b = yc - niche / 2, yc + niche / 2
-    cabinets(x0, x1, y0, a, 0, 2.40, "y", 2, mat="lacquer_w", plinth=0.05)
-    cabinets(x0, x1, b, y1, 0, 2.40, "y", 2, mat="lacquer_w", plinth=0.05)
+    cabinets(x0, x1, y0, a, 0, 2.40, "y", 2, mat="lacquer_t", plinth=0.05)
+    cabinets(x0, x1, b, y1, 0, 2.40, "y", 2, mat="lacquer_t", plinth=0.05)
     cabinets(x0 + 0.15, x1, a, b, 0, 0.55, "y", 2, mat="walnut", plinth=0.05)   # cassettoni sotto la TV
-    cabinets(x0, x1, a, b, 1.75, 2.40, "y", 2, mat="lacquer_w", plinth=0)       # pensile sopra
+    cabinets(x0, x1, a, b, 1.75, 2.40, "y", 2, mat="lacquer_t", plinth=0)       # pensile sopra
     box("walnut", x1 - 0.02, x1, a, b, 0.55, 1.75)                              # fondo del vano
     box("tv", x1 - 0.06, x1 - 0.02, yc - 0.49, yc + 0.49, 0.90, 1.47, bevel=0.003)   # TV 43"
 
@@ -1174,7 +1191,7 @@ def add_furniture():
     B("ceramic", 6.30, 6.90, 0.36, 0.45, 0.4, bevel=0.05)
     B("ceramic", 6.95, 7.00, 0.36, 0.55, 0.4, bevel=0.05)
     vanity(7.45, 8.35, 7.08, 7.55, "N")                                        # mobile 90 cm sotto il vasistas
-    # --- bagno piccolo: doccia 80 x 120 nell'angolo sotto la finestra, mobiletto accanto, sanitari
+    # --- bagno piccolo: doccia 80 x 120 nell'angolo sotto la finestra, scaldasalviette, sanitari e mobiletto
     box("ceramic", 0.27, 1.07, 1.87, 3.07, 0.0, 0.04, bevel=0.01)              # piatto doccia 80 x 120
     box("glass", 1.07, 1.09, 1.87, 2.47, 0.04, 2.00)                           # vetro fisso (ingresso 60 cm)
     box("glass", 0.27, 1.09, 3.07, 3.09, 0.04, 2.00)                           # vetro di testa verso il mobiletto
@@ -1183,7 +1200,11 @@ def add_furniture():
     B("ceramic", 1.45, 1.85, 0.36, 0.20, 0.8, bevel=0.03)                      # wc
     B("ceramic", 1.45, 2.05, 0.36, 0.45, 0.4, bevel=0.05)
     B("ceramic", 1.95, 1.85, 0.36, 0.55, 0.4, bevel=0.05)                      # bidet
-    vanity(0.35, 0.95, 3.12, 3.55, "S")                                        # mobiletto 60 cm accanto alla doccia
+    vanity(1.40, 2.00, 3.10, 3.55, "S")                                        # mobiletto 60 cm, davanti al wc
+    for k in range(7):                                                         # scaldasalviette nell'angolo dietro il vetro
+        box("frame_w", 0.40, 0.95, 3.50, 3.53, 0.40 + k * 0.17, 0.42 + k * 0.17)
+    for xx in (0.40, 0.93):
+        box("frame_w", xx, xx + 0.02, 3.50, 3.53, 0.35, 1.50)
     # --- w.c. garage: doccia 70 x 120 a sinistra, wc sul muro di fondo, lavamani; porta sul lato destro
     box("ceramic", -3.53, -2.85, 5.52, 6.68, 0.0, 0.04, bevel=0.01)            # piatto doccia 70 x 120
     box("glass", -2.85, -2.83, 5.52, 6.08, 0.04, 2.00)                         # vetro fisso (ingresso 60 cm)
@@ -1313,29 +1334,29 @@ def add_furniture():
     B("mirror", 4.55, 14.42, 0.80, 0.02, 1.05, 0.98, bevel=0.002)
     B("black_matte", 4.54, 14.435, 0.82, 0.01, 1.07, 0.97)
 
-    # --- camera: armadio sul muro della porta, letto spostato di 45 cm verso la finestra,
+    # --- camera: armadio a 3 ante sul muro della porta (lascia libero il comodino), letto al centro,
     #     armadio con vano TV al centro sul muro di fronte al letto
-    cabinets(0.25, 2.95, 6.90, 7.50, 0, 2.40, "x", 4, mat="lacquer_w", plinth=0.05)
-    bed(0.30, 8.55, 2.00, 1.60, "E", headboard=True)                            # letto 160 x 200, testiera a muro
-    B("walnut", 0.30, 8.10, 0.40, 0.40, 0.45, bevel=0.005)                     # comodini
-    B("walnut", 0.30, 10.20, 0.40, 0.40, 0.45, bevel=0.005)
-    tv_wardrobe(3.65, 4.25, 7.95, 10.85, 9.35)
-    # --- cameretta doppia: due letti in fila sul muro destro con armadio a ponte, due scrivanie
-    bed(5.95, 0.30, 0.90, 2.00, "S")
-    bed(5.95, 2.35, 0.90, 2.00, "S")
-    cabinets(6.45, 6.85, 0.30, 4.35, 1.80, 2.40, "y", 6, mat="lacquer_w", plinth=0)   # ponte sopra i letti
-    for ya in (0.30, 1.50):
-        desk(4.15, 4.75, ya, ya + 1.18)
-        chair(4.80, ya + 0.37, "W")
+    cabinets(1.35, 2.85, 6.90, 7.50, 0, 2.40, "x", 3, mat="lacquer_t", plinth=0.05)   # 3 ante, 150 cm
+    bed(0.30, 8.10, 2.00, 1.60, "E", headboard=True)                            # letto 160 x 200 al centro della parete
+    B("walnut", 0.30, 7.65, 0.40, 0.40, 0.45, bevel=0.005)                     # comodini
+    B("walnut", 0.30, 9.75, 0.40, 0.40, 0.45, bevel=0.005)
+    tv_wardrobe(3.65, 4.25, 7.95, 10.85, 8.90)
+    # --- cameretta doppia: letto a castello nell'angolo in basso a destra, armadi su tutto il resto,
+    #     scrivania sotto la finestra
+    bunk(5.95, 2.50)
+    cabinets(4.15, 4.75, 0.25, 3.25, 0, 2.40, "y", 5, mat="lacquer_t", plinth=0.05)   # armadio 3,00 m sul muro della porta
+    cabinets(6.30, 6.85, 0.25, 2.45, 0, 2.40, "y", 4, mat="lacquer_t", plinth=0.05)   # armadio 2,20 m sul muro destro
+    desk(4.80, 6.25, 0.25, 0.85, along="x")
+    chair(5.30, 0.95, "N")
     # --- studio (ex ripostiglio): scrivania sotto la finestra, armadietto, sedia
     desk(1.05, 2.35, 0.25, 0.85, along="x")
     chair(1.48, 0.95, "N")
-    cabinets(0.28, 0.88, 0.28, 1.20, 0, 2.00, "y", 2, mat="lacquer_w", plinth=0.05)
+    cabinets(0.28, 0.88, 0.28, 1.20, 0, 2.00, "y", 2, mat="lacquer_t", plinth=0.05)
     # --- cameretta singola (ex studio): letto sotto parete alta, scrivania sotto la finestra, armadio
     bed(0.85, 3.70, 2.00, 0.90, "W")
     desk(0.28, 0.83, 4.70, 5.90)
     chair(0.88, 5.08, "W")
-    cabinets(0.28, 1.90, 6.05, 6.65, 0, 2.30, "x", 3, mat="lacquer_w", plinth=0.05)
+    cabinets(0.28, 1.90, 6.05, 6.65, 0, 2.30, "x", 3, mat="lacquer_t", plinth=0.05)
     # --- pilastro nel ripostiglio accanto alla doccia
     B("plaster_int", 4.15, 5.20, 0.27, 0.45, 2.7)
 
