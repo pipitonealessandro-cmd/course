@@ -53,12 +53,10 @@ In metri, coordinata Y lungo il muro (vedi assets per la X):
 
 ## Facciata sud (cucina, verso strada)
 
-- Finestra sopra il lavello: **1,50 × 0,90 m** (finestrone, ultima
-  versione), davanzale 1,10 m, sommità 2,00 m, centrata sul muro (che va
-  da x 4,125 a 8,575 m, centro a 6,35 m)
-  - Versioni precedenti scartate: 0,90×0,60 m (troppo piccola), 1,20×0,70 m
-    (via di mezzo) — l'utente ha scelto alla fine 1,50×0,90 m per un
-    "finestrone sul lavello"
+- Finestra sopra il lavello: **1,40 × 1,20 m** (ultima versione, scelta dall'utente in Claude Code),
+  davanzale **1,00 m**, sommità **2,20 m**, centrata sul muro (x 5,65–7,05, centro 6,35). Alzatina
+  del piano cucina fino a 1,00 m; rubinetto spostato sul lato destro del lavello perché l'anta apra libera.
+  - Versioni precedenti scartate: 0,90×0,60, 1,20×0,70, poi 1,50×0,90 (davanzale 1,10, sommità 2,00)
 
 ## Aperture interne
 
