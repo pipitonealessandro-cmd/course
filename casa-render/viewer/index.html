@@ -156,9 +156,10 @@ figcaption b{color:var(--ink);font-weight:650;margin-right:6px}
   </main>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/controls/OrbitControls.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/loaders/GLTFLoader.js"></script>
+<!-- three.js r147 pubblicato insieme alla pagina: nell'app di Claude i CDN esterni possono non essere raggiungibili -->
+<script src="lib/three.min.js"></script>
+<script src="lib/OrbitControls.js"></script>
+<script src="lib/GLTFLoader.js"></script>
 <script>
 (function(){
 "use strict";
@@ -434,7 +435,7 @@ window.addEventListener('error',function(e){
 });
 
 function initThree(){
-  if(!window.THREE||!THREE.GLTFLoader||!THREE.OrbitControls){fail('Non riesco a scaricare il motore 3D (three.js). Controlla la connessione e premi Riprova, oppure usa il Tour 360°.','cdn.jsdelivr.net non raggiungibile');return;}
+  if(!window.THREE||!THREE.GLTFLoader||!THREE.OrbitControls){fail('Non riesco a scaricare il motore 3D (three.js). Controlla la connessione e premi Riprova, oppure usa il Tour 360°.','file lib/three.min.js non caricato');return;}
   if(!hasWebGL()){fail('Questo dispositivo o questa app non permette la grafica 3D (WebGL). Prova ad aprire il link da Chrome o Safari. Il Tour 360° e i Render funzionano lo stesso.','WebGL non disponibile');return;}
   if(THREE.ColorManagement) THREE.ColorManagement.legacyMode=false;
   var canvas=document.getElementById('three');
