@@ -480,7 +480,7 @@ def build_materials():
 
 # ---------------------------------------------------------------- muri
 
-SHOE_H = 0.90   # altezza della scarpiera dell'ingresso
+SHOE_H = 0.85   # altezza della scarpiera dell'ingresso (sotto il davanzale a 0,90)
 TYPES = {"w": (0.9, 2.3), "w1": (1.0, 2.4), "wk": (1.1, 2.0), "wc": (1.00, 2.20),
          "d": (0, 2.1), "wh": (1.80, 2.25), "g": (0, 2.4), "p": (0, 2.3), "wf": (1.20, 2.30), "wft": (0.90, 2.30), "sc": (0, 2.1)}
 
@@ -492,7 +492,7 @@ WALLS = [
     [7.10, 5.625, 8.575, 5.625, EXT, [[7.30, 8.20, "p"]], "N"],   # porta finestra bagno grande
     [8.575, 5.625, 8.575, 18.625, EXT, [], "E"],
     [4.125, 18.625, 8.575, 18.625, EXT, [[5.65, 7.05, "wc"]], "S"],   # finestra lavello 1,40 x 1,20, davanzale 1,00
-    [4.125, 11.275, 4.125, 18.625, EXT, [[11.30, 12.30, "w"], [12.60, 13.60, "d"], [13.72, 13.97, "wft"], [14.12, 14.37, "wf"], [16.70, 17.90, "p"]], "W"],
+    [4.125, 11.275, 4.125, 18.625, EXT, [[11.30, 12.30, "w"], [12.60, 13.60, "d"], [13.72, 14.32, "w"], [16.70, 17.90, "p"]], "W"],   # finestra 60x140 accanto al portoncino
     [4.375, 6.775, 4.375, 11.025, EXT, [], None],
     [0.125, 6.775, 4.375, 6.775, EXT, [[3.05, 3.95, "d"]], None],
     [-3.675, 11.025, 4.375, 11.025, EXT, [[-3.175, -0.375, "g"], [1.40, 3.20, "w"]], "S"],
@@ -1233,7 +1233,7 @@ def add_furniture():
     box("frame", px1 - 0.03, px1, 9.30, 9.335, 0.01, 2.07)
     box("glass", px0 + 0.03, px1 - 0.03, 9.31, 9.325, 0.05, 2.03)
     # mobile d'ingresso ad angolo con specchio
-    # scarpiera 120 x 28 lungo il muretto della vetrata, sotto la feritoia alta
+    # scarpiera 120 x 28 lungo il muretto della vetrata, sotto la finestra 60 x 140
     B("oak_furn", 4.25, 14.15, 1.20, 0.28, SHOE_H - 0.04, 0.04, bevel=0.003)
     B("black_matte", 4.28, 14.18, 1.14, 0.22, 0.04)
     B("walnut", 4.25, 14.15, 1.20, 0.28, 0.03, SHOE_H, bevel=0.002)
