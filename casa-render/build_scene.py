@@ -480,6 +480,7 @@ def build_materials():
 
 # ---------------------------------------------------------------- muri
 
+SHOE_H = 0.90   # altezza della scarpiera dell'ingresso
 TYPES = {"w": (0.9, 2.3), "w1": (1.0, 2.4), "wk": (1.1, 2.0), "wc": (1.00, 2.20),
          "d": (0, 2.1), "wh": (1.80, 2.25), "g": (0, 2.4), "p": (0, 2.3), "wf": (1.20, 2.30), "wft": (0.90, 2.30), "sc": (0, 2.1)}
 
@@ -1232,10 +1233,10 @@ def add_furniture():
     box("frame", px1 - 0.03, px1, 9.30, 9.335, 0.01, 2.07)
     box("glass", px0 + 0.03, px1 - 0.03, 9.31, 9.325, 0.05, 2.03)
     # mobile d'ingresso ad angolo con specchio
-    # scarpiera 120 x 28 lungo il muretto della vetrata, sotto la feritoia alta (la feritoia a terra resta libera)
-    B("oak_furn", 4.25, 14.15, 1.20, 0.28, 0.86, 0.04, bevel=0.003)
+    # scarpiera 120 x 28 lungo il muretto della vetrata, sotto la feritoia alta
+    B("oak_furn", 4.25, 14.15, 1.20, 0.28, SHOE_H - 0.04, 0.04, bevel=0.003)
     B("black_matte", 4.28, 14.18, 1.14, 0.22, 0.04)
-    B("walnut", 4.25, 14.15, 1.20, 0.28, 0.03, 0.90, bevel=0.002)
+    B("walnut", 4.25, 14.15, 1.20, 0.28, 0.03, SHOE_H, bevel=0.002)
     B("mirror", 4.55, 14.42, 0.80, 0.02, 1.05, 0.98, bevel=0.002)
     B("black_matte", 4.54, 14.435, 0.82, 0.01, 1.07, 0.97)
 
@@ -1541,9 +1542,19 @@ def main():
     ap.add_argument("--boxes", default="")
     ap.add_argument("--sun", default="", help="azimut reale,altezza in gradi (es. 180,45 = mezzogiorno)")
     ap.add_argument("--tag", default="", help="suffisso del nome file dei render")
+    ap.add_argument("--variant", default="", help="anteprime di varianti non ancora approvate (es. finestra_ingresso)")
     ap.add_argument("--panos", default="")
     ap.add_argument("--pano-size", type=int, default=768)
     a = ap.parse_args(argv)
+    if a.variant == "finestra_ingresso":
+        # variante: al posto delle feritoie una finestra da 75 cm unita al portoncino (unico serramento),
+        # davanzali di entrambe le finestre del soggiorno a 0,85 m, scarpiera alta 80 cm
+        global SHOE_H
+        TYPES["wl"] = (0.85, 2.30)
+        for w in WALLS:
+            if w[0] == 4.125 and w[1] == 11.275:
+                w[5] = [[11.30, 12.30, "wl"], [12.60, 13.60, "d"], [13.68, 14.43, "wl"], [16.70, 17.90, "p"]]
+        SHOE_H = 0.80
     if a.sun:
         global SUN_AZ, SUN_EL
         az_real, el = (float(v) for v in a.sun.split(","))
