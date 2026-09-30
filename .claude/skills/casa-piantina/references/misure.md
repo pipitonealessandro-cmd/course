@@ -42,7 +42,8 @@ apertura verso l'interno a 90°.
 In metri, coordinata Y lungo il muro (vedi assets per la X):
 - Finestra bagno piccolo: y 2,30–3,10 (0,80 m), davanzale 1,00 m, sommità 2,40 m
 - Finestra studio: y 4,00–5,20 (1,20 m), davanzale 0,90 m, sommità 2,30 m
-- Finestra soggiorno: y 11,30–12,30 (1,00 m), davanzale 0,90 m, sommità 2,30 m
+- Vetrata soggiorno (ex finestra): y 11,30–12,30 (1,00 m), **da terra a 2,50 m**, apribile. Scelta dall'utente per più luce:
+  2,50 m² = 1/8 dei ~20 m² del soggiorno (minimo DM 5/7/1975). Prima: finestra 1,00 × 1,40 con davanzale 0,90
 - Portoncino d'ingresso: y 12,60–13,60 (1,00 m), a terra, sommità 2,10 m
 - Porta finestra cucina: y 16,70–17,90 (1,20 m), a terra, sommità 2,30 m — **spostata dall'utente** (prima 16,05–17,25): 60 cm dall'angolo interno, a filo del fronte dei mobili del lavello
 

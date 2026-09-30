@@ -478,7 +478,7 @@ def build_materials():
 # ---------------------------------------------------------------- muri
 
 TYPES = {"w": (0.9, 2.3), "w1": (1.0, 2.4), "wk": (1.1, 2.0), "wc": (1.00, 2.20),
-         "d": (0, 2.1), "wh": (1.80, 2.25), "g": (0, 2.4), "p": (0, 2.3), "sc": (0, 2.1)}
+         "d": (0, 2.1), "wh": (1.80, 2.25), "g": (0, 2.4), "p": (0, 2.3), "pv": (0, 2.50), "sc": (0, 2.1)}
 
 # [x1,y1,x2,y2,spessore,[[da,a,tipo],...], lato esterno (per perimetro) , estendi estremi]
 WALLS = [
@@ -488,7 +488,7 @@ WALLS = [
     [7.10, 5.625, 8.575, 5.625, EXT, [[7.30, 8.20, "p"]], "N"],   # porta finestra bagno grande
     [8.575, 5.625, 8.575, 18.625, EXT, [], "E"],
     [4.125, 18.625, 8.575, 18.625, EXT, [[5.65, 7.05, "wc"]], "S"],   # finestra lavello 1,40 x 1,20, davanzale 1,00
-    [4.125, 11.275, 4.125, 18.625, EXT, [[11.30, 12.30, "w"], [12.60, 13.60, "d"], [16.70, 17.90, "p"]], "W"],
+    [4.125, 11.275, 4.125, 18.625, EXT, [[11.30, 12.30, "pv"], [12.60, 13.60, "d"], [16.70, 17.90, "p"]], "W"],
     [4.375, 6.775, 4.375, 11.025, EXT, [], None],
     [0.125, 6.775, 4.375, 6.775, EXT, [[3.05, 3.95, "d"]], None],
     [-3.675, 11.025, 4.375, 11.025, EXT, [[-3.175, -0.375, "g"], [1.40, 3.20, "w"]], "S"],
@@ -584,7 +584,7 @@ def add_walls():
             if sill > 0:
                 solid(a, b, 0, sill)
             solid(a, b, top, H)
-            if k[0] == "w" or k == "p":
+            if k[0] == "w" or k in ("p", "pv"):
                 window(horiz, fixed, a, b, t, sill, top, side, k)
             elif k == "g":
                 wall_piece("garage", horiz, fixed, a, b, t * 0.3, 0, top, t * 0.25)
@@ -1193,7 +1193,7 @@ def add_furniture():
     for i in range(4):
         ya = 12.59 + i * 0.45
         box("walnut", 8.05, 8.45, ya + 0.002, ya + 0.448, 0.08, 2.00, bevel=0.003)
-    potted_plant(4.85, 11.75, 1.6, seed=13)
+    potted_plant(8.15, 10.35, 1.6, seed=13)          # accanto alla parete TV (la vetrata resta libera)
     # lampada da terra ad arco accanto al divano
     box("black_matte", 5.60, 5.85, SY - 0.35, SY - 0.10, 0.0, 0.03)
     box("black_matte", 5.71, 5.74, SY - 0.24, SY - 0.21, 0.03, 1.55)
