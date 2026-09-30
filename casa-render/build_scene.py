@@ -1241,22 +1241,24 @@ def add_furniture():
     cabinets(8.10, 8.45, 17.55, 18.45, 1.45, 2.20, "y", 1, plinth=0)
     box("steel", 8.05, 8.45, 16.85, 17.50, 1.62, 1.70, bevel=0.003)            # cappa sottopensile
     box("led", 8.11, 8.13, 15.83, 16.79, 1.44, 1.45)
-    # angolo pranzo: porta finestra spostata a 60 cm dall'angolo (a filo dei mobili del lavello),
-    # 2,15 m di muro libero -> divanetto a panca 200 cm, tavolo 160 x 85, 2 sedie: 5 posti.
-    # Passaggio dall'apertura di 1,80 m: libero tra y 14,55 e 15,45 davanti alla colonna frigo.
-    box("black_matte", 4.27, 4.93, 14.62, 16.58, 0.0, 0.06)                     # zoccolo
-    box("sofa", 4.25, 4.95, 14.60, 16.60, 0.06, 0.34, bevel=0.02)                # base
-    box("sofa", 4.40, 4.97, 14.62, 16.58, 0.34, 0.45, bevel=0.035)               # seduta
-    box("sofa", 4.25, 4.42, 14.60, 16.60, 0.34, 0.90, bevel=0.035)               # schienale
-    for yy in (14.66, 15.32, 15.98):                                             # cuscini
-        box("sofa2", 4.40, 4.56, yy, yy + 0.58, 0.45, 0.82, bevel=0.06)
-    box("walnut", 5.05, 5.90, 14.80, 16.40, 0.72, 0.76, bevel=0.004)             # tavolo 160 x 85
-    for lx, ly in ((5.11, 14.86), (5.80, 14.86), (5.11, 16.30), (5.80, 16.30)):
+    # angolo pranzo: al posto del divanetto una credenza da cucina 180 x 50 con alzata a vetrina sul muro
+    # ovest; tavolo 160 x 85 al centro della cucina con 4 sedie (2 per lato).
+    cabinets(4.25, 4.75, 14.80, 16.60, 0, 0.88, "y", 4, mat="lacquer", plinth=0.08)    # base credenza
+    box("walnut", 4.25, 4.78, 14.78, 16.62, 0.88, 0.92, bevel=0.003)                   # piano in noce
+    cabinets(4.25, 4.60, 14.80, 16.60, 1.35, 2.20, "y", 4, mat="lacquer", plinth=0)     # alzata
+    for k in range(4):                                                                 # ante a vetrina
+        ya = 14.80 + k * 0.45
+        box("glass", 4.600, 4.605, ya + 0.06, ya + 0.39, 1.41, 2.14)
+    box("led", 4.25, 4.59, 14.81, 16.59, 1.34, 1.35)                                   # luce sotto l'alzata
+    TX0, TX1, TY0, TY1 = 5.90, 6.75, 15.40, 17.00
+    box("walnut", TX0, TX1, TY0, TY1, 0.72, 0.76, bevel=0.004)                         # tavolo 160 x 85
+    for lx, ly in ((TX0 + 0.06, TY0 + 0.06), (TX1 - 0.10, TY0 + 0.06), (TX0 + 0.06, TY1 - 0.10), (TX1 - 0.10, TY1 - 0.10)):
         B("black_matte", lx, ly, 0.04, 0.04, 0.72)
-    chair(6.00, 15.45, "W")                                                      # lato mobili
-    chair(6.00, 15.95, "W")
-    pendant(5.48, 15.20)
-    pendant(5.48, 16.00)
+    for yy in (15.62, 16.34):
+        chair(TX0 - 0.54, yy, "E")                                                     # lato credenza
+        chair(TX1 + 0.10, yy, "W")                                                     # lato mobili
+    pendant(6.325, 15.80)
+    pendant(6.325, 16.60)
     # TV 32" (0,73 x 0,43 m) su braccio orientabile, sul muretto accanto alla vetrata
     box("black_matte", 4.98, 5.14, 14.55, 14.57, 1.25, 1.45)                     # piastra a muro
     box("black_matte", 5.04, 5.08, 14.57, 14.66, 1.33, 1.37)                     # braccio
@@ -1576,7 +1578,7 @@ def export_glb(path):
 PANOS = {
     # nome: (x, y, z) in pianta
     "soggiorno": (5.6, 13.55, 1.55),
-    "cucina": (7.15, 16.75, 1.55),
+    "cucina": (7.5, 17.3, 1.55),
     "camera": (2.75, 10.1, 1.55),
     "giardino": (1.1, 17.4, 1.55),
     "retro": (-1.0, -1.3, 1.6),
