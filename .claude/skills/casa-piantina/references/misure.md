@@ -95,4 +95,7 @@ Lotto: **25 × 12,5 m**. Nelle coordinate del modello (x verso destra, y verso i
 - "Da ingresso a muro perimetrale sinistro 7,2 m" è stato interpretato come la posizione del
   **cancelletto pedonale** sul muro in basso (x = 3,40): dalla facciata del portoncino al confine
   sinistro la piantina dà 7,8 m, incompatibile. Da confermare con l'utente.
-- Muri di confine: 1,20 m su strada con cancello carrabile davanti al garage e cancelletto; 1,80 m sugli altri lati.
+- Muri di confine: 1,20 m su strada (carrabile 2,90 m, pilastro 0,50 m, pedonale 1,00 m); 1,80 m sugli altri lati.
+- **I muri laterali della casa SONO i muri di confine** (come in piantina, non staccati): i muri di confine
+  laterali esistono solo dove c'è giardino (a sinistra dietro il garage e lungo il giardino davanti;
+  a destra dietro la zona notte e davanti alla cucina).

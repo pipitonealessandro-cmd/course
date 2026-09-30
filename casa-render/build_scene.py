@@ -915,10 +915,16 @@ def add_exterior(M):
         box("plaster_ext", a_, b_, y1, y1 + t, GROUND, GROUND + hs)
         box("threshold", a_ - 0.02, b_ + 0.02, y1 - 0.02, y1 + t + 0.02, GROUND + hs, GROUND + hs + 0.04)
     box("plaster_ext", x0 - t, x1 + t, y0 - t, y0, GROUND, GROUND + hb)                   # retro
-    box("plaster_ext", x0 - t, x0, y0, y1, GROUND, GROUND + hb)                           # sinistro (ovest)
-    box("plaster_ext", x1, x1 + t, y0, y1, GROUND, GROUND + hb)                           # destro (est)
-    for xa, xb in ((x0 - t, x0), (x1, x1 + t)):
-        box("threshold", xa - 0.02, xb + 0.02, y0 - t, y1, GROUND + hb, GROUND + hb + 0.04)
+    # muri di confine laterali solo dove c'è giardino: dove la casa è sul confine, il muro è quello della casa
+    side_walls = [
+        (x0 - t, x0, y0, 5.25, hb),        # sinistro, dietro il garage
+        (x0 - t, x0, 11.15, y1, hb),       # sinistro, lungo il giardino davanti
+        (x1, x1 + t, y0, 5.5, hb),         # destro, dietro la zona notte
+        (x1, x1 + t, 18.75, y1, hb),       # destro, davanti alla cucina
+    ]
+    for xa, xb, ya, yb, hh in side_walls:
+        box("plaster_ext", xa, xb, ya, yb, GROUND, GROUND + hh)
+        box("threshold", xa - 0.02, xb + 0.02, ya, yb, GROUND + hh, GROUND + hh + 0.04)
     box("threshold", x0 - t, x1 + t, y0 - t - 0.02, y0 + 0.02, GROUND + hb, GROUND + hb + 0.04)
     # cancelli a doghe verticali
     for gx0, gx1 in gates:
