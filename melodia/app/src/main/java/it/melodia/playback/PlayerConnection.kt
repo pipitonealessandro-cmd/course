@@ -22,7 +22,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 /**
- * UI-side handle to the playback service. Owns the queue logic (radio / autoplay) and exposes
+ * UI-side handle to the playback service (autoplay lives in QueueExtender). Exposes
  * the player state as flows for Compose.
  */
 class PlayerConnection(private val app: MelodiaApp) {
@@ -56,11 +56,7 @@ class PlayerConnection(private val app: MelodiaApp) {
     val duration: Long get() = controller?.duration?.takeIf { it > 0 } ?: 0L
     val bufferedPosition: Long get() = controller?.bufferedPosition ?: 0L
 
-    // Radio / autoplay state
-    private data class Radio(val playlistId: String?, var continuation: String?)
-    private var radio: Radio? = null
     private var radioGeneration = 0
-    private var radioLoading = false
     private var sleepJob: Job? = null
 
     private val listener = object : Player.Listener {
@@ -68,7 +64,6 @@ class PlayerConnection(private val app: MelodiaApp) {
 
         override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
             refreshLike()
-            maybeExtendRadio()
         }
 
         override fun onPlayerError(error: PlaybackException) {
@@ -127,7 +122,6 @@ class PlayerConnection(private val app: MelodiaApp) {
     fun playQueue(songs: List<SongItem>, startIndex: Int = 0, shuffle: Boolean = false) {
         if (songs.isEmpty()) return
         launchWithController { c ->
-            radio = null
             radioGeneration++
             c.shuffleModeEnabled = shuffle
             val start = if (shuffle && startIndex == 0) songs.indices.random() else startIndex
@@ -137,24 +131,20 @@ class PlayerConnection(private val app: MelodiaApp) {
         }
     }
 
-    /** Plays one song; with autoplay enabled, the queue continues with similar songs. */
-    fun playSong(song: SongItem) {
-        if (app.prefs.autoRadio.value) startRadio(song) else playQueue(listOf(song))
-    }
+    /** Plays one song; with autoplay enabled the service then queues similar songs (QueueExtender). */
+    fun playSong(song: SongItem) = playQueue(listOf(song))
 
+    /** Explicit "song radio": plays the song followed by similar songs. */
     fun startRadio(song: SongItem) {
         launchWithController { c ->
             val gen = ++radioGeneration
+            val page = withContext(Dispatchers.IO) { app.yt.next(song.videoId, "RDAMVM${song.videoId}") }
+            if (gen != radioGeneration) return@launchWithController
+            val rest = page.songs.filter { it.videoId != song.videoId }
             c.shuffleModeEnabled = false
-            c.setMediaItems(listOf(song.toMediaItem()), 0, 0L)
+            c.setMediaItems((listOf(song) + rest).map { it.toMediaItem() }, 0, 0L)
             c.prepare()
             c.play()
-            val playlistId = "RDAMVM${song.videoId}"
-            radio = Radio(playlistId, null)
-            val page = withContext(Dispatchers.IO) { app.yt.next(song.videoId, playlistId) }
-            if (gen != radioGeneration) return@launchWithController
-            c.addMediaItems(page.songs.filter { it.videoId != song.videoId }.map { it.toMediaItem() })
-            radio = Radio(page.playlistId ?: playlistId, page.continuation)
         }
     }
 
@@ -172,28 +162,6 @@ class PlayerConnection(private val app: MelodiaApp) {
             c.setMediaItems(page.songs.map { it.toMediaItem() }, 0, 0L)
             c.prepare()
             c.play()
-            radio = Radio(page.playlistId ?: playlistId, page.continuation)
-        }
-    }
-
-    private fun maybeExtendRadio() {
-        val c = controller ?: return
-        val r = radio ?: return
-        val token = r.continuation ?: return
-        if (radioLoading || c.mediaItemCount - c.currentMediaItemIndex > 5) return
-        radioLoading = true
-        val gen = radioGeneration
-        scope.launch {
-            try {
-                val page = withContext(Dispatchers.IO) { app.yt.nextContinuation(token, r.playlistId) }
-                if (gen != radioGeneration) return@launch
-                val existing = (0 until c.mediaItemCount).map { c.getMediaItemAt(it).mediaId }.toSet()
-                c.addMediaItems(page.songs.filter { it.videoId !in existing }.map { it.toMediaItem() })
-                r.continuation = page.continuation
-            } catch (_: Exception) {
-            } finally {
-                radioLoading = false
-            }
         }
     }
 

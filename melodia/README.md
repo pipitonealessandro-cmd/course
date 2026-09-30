@@ -36,6 +36,17 @@ Per gli **aggiornamenti** basta scaricare e installare il nuovo `Melodia.apk` so
    - Se Google blocca il login ("browser non sicuro"), usa *Impostazioni → Accesso avanzato (incolla cookie)*.
 3. Vai in **Impostazioni → Disattiva ottimizzazione batteria**. Su Xiaomi, Samsung, Huawei, Oppo ecc. è importante: senza questa impostazione il telefono può fermare la musica dopo qualche minuto a schermo spento.
 
+## Android Auto 🚗
+
+Melodia compare tra le app musicali di Android Auto, con Home, Brani che ti piacciono, Playlist, Ascoltati di recente, ricerca e comandi dal volante o vocali ("Ok Google, metti Vasco Rossi su Melodia").
+
+Android Auto però nasconde le app non installate dal Play Store. Una volta sola, sul telefono:
+
+1. Apri **Impostazioni → Dispositivi connessi → Android Auto** (oppure cerca "Android Auto" nelle impostazioni).
+2. Scorri in fondo e tocca **10 volte** la voce **Versione**, poi conferma: si attivano le impostazioni sviluppatore.
+3. Dal menu **⋮** in alto apri **Impostazioni sviluppatore** e attiva **Origini sconosciute**.
+4. Scollega e ricollega il telefono all'auto.
+
 ## Cosa si può fare
 
 | Schermata | Funzioni |
@@ -48,7 +59,7 @@ Per gli **aggiornamenti** basta scaricare e installare il nuovo `Melodia.apk` so
 
 Altre cose utili:
 
-- **Riproduzione automatica**: quando avvii un singolo brano, la musica continua con brani simili (disattivabile nelle impostazioni).
+- **Riproduzione automatica**: quando la coda sta per finire (un singolo brano, un album, una playlist) la musica continua da sola con brani simili, dello stesso artista o di artisti e generi affini. Si disattiva nelle impostazioni.
 - **Cache**: i brani ascoltati di recente vengono salvati (fino a 1 GB) e riascoltarli non consuma dati.
 - **Qualità audio**: *Alta* oppure *Risparmio dati*.
 

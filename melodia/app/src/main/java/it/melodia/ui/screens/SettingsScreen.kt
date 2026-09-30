@@ -108,7 +108,7 @@ fun SettingsScreen(contentPadding: PaddingValues) {
             Column(Modifier.weight(1f)) {
                 Text("Riproduzione automatica", style = MaterialTheme.typography.bodyLarge)
                 Text(
-                    "Quando avvii un singolo brano, continua con brani simili",
+                    "Quando la coda finisce, continua con brani simili dello stesso artista o genere",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
