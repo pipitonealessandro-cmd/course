@@ -117,4 +117,4 @@ modello e per non riproporre opzioni già scartate.
 10. Studio → **cameretta singola**: letto 90 x 200, scrivania sotto la finestra, armadio 1,60 m.
 11. **Cancelli dalla piantina**: carrabile ~2,90 m (x -0,47..2,42), pilastro ~0,50 m, pedonale ~1,00 m (x 2,95..3,95; centro a ~7,2 m dal muro sinistro). Passo carrabile **in diagonale** dal cancello al garage (linea tratteggiata), aiuola triangolare a sinistra (palma), **fioriera** in muratura lungo il muro su strada davanti alla cucina, albero nel giardino come in piantina.
 12. Visore: **sagoma di persona alta 1,75 m** trascinabile tra gli ambienti.
-- **Finestra del soggiorno portata a terra** come vetrata apribile 1,00 m, **alta come il portoncino (2,10)**: la versione a 2,50 è stata scartata dall'utente (troppo alta). Pianta spostata accanto alla parete TV.
+- Finestra del soggiorno: provate vetrate a terra (2,50 e 2,10), **poi riportata alla finestra originale** 1,00 × 1,40. Per più luce, **due feritoie verticali** 25 cm a destra del portoncino con davanzale a 1,20 (sotto c'è la scarpiera dell'ingresso). Pianta spostata accanto alla parete TV.
