@@ -1341,13 +1341,13 @@ def add_furniture():
     B("walnut", 0.30, 7.65, 0.40, 0.40, 0.45, bevel=0.005)                     # comodini
     B("walnut", 0.30, 9.75, 0.40, 0.40, 0.45, bevel=0.005)
     tv_wardrobe(3.65, 4.25, 7.95, 10.85, 8.90)
-    # --- cameretta doppia: letto a castello nell'angolo in basso a destra, armadi su tutto il resto,
-    #     scrivania sotto la finestra
+    # --- cameretta doppia: letto a castello nell'angolo in basso a destra, armadio a 4 ante sul muro destro,
+    #     due scrivanie sul muro della porta
     bunk(5.95, 2.50)
-    cabinets(4.15, 4.75, 0.25, 3.25, 0, 2.40, "y", 5, mat="lacquer_t", plinth=0.05)   # armadio 3,00 m sul muro della porta
-    cabinets(6.30, 6.85, 0.25, 2.45, 0, 2.40, "y", 4, mat="lacquer_t", plinth=0.05)   # armadio 2,20 m sul muro destro
-    desk(4.80, 6.25, 0.25, 0.85, along="x")
-    chair(5.30, 0.95, "N")
+    cabinets(6.30, 6.85, 0.25, 2.45, 0, 2.40, "y", 4, mat="lacquer_t", plinth=0.05)   # armadio 4 ante 2,20 m sul muro destro
+    for ya in (0.30, 1.50):
+        desk(4.15, 4.75, ya, ya + 1.18)
+        chair(4.80, ya + 0.37, "W")
     # --- studio (ex ripostiglio): scrivania sotto la finestra, armadietto, sedia
     desk(1.05, 2.35, 0.25, 0.85, along="x")
     chair(1.48, 0.95, "N")
