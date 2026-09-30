@@ -1,0 +1,56 @@
+name: Quiz Nautica APK
+
+on:
+  push:
+    paths:
+      - "quiz_nautica/**"
+      - ".github/workflows/quiz-nautica-apk.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: quiz_nautica
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.47.5
+          cache: true
+
+      - run: flutter pub get
+      - run: flutter analyze
+      - run: flutter test
+      - run: flutter build apk --release
+
+      - name: Rename APK
+        run: cp build/app/outputs/flutter-apk/app-release.apk quiz-nautica.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: quiz-nautica-apk
+          path: quiz_nautica/quiz-nautica.apk
+
+      # Pubblica l'APK in una release "quiz-nautica-latest", comoda da scaricare dal telefono.
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: quiz-nautica-latest
+          name: Quiz Nautica (ultima build)
+          target_commitish: ${{ github.sha }}
+          prerelease: true
+          files: quiz_nautica/quiz-nautica.apk
+          body: |
+            APK di prova generato automaticamente dal branch `${{ github.ref_name }}` (commit ${{ github.sha }}).
+            Scaricalo dal telefono Android e installalo (consenti l'installazione da origini sconosciute).
