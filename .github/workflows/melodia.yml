@@ -1,0 +1,71 @@
+name: Melodia APK
+
+on:
+  push:
+    paths:
+      - "melodia/**"
+      - ".github/workflows/melodia.yml"
+  workflow_dispatch:
+  # Rebuild weekly so the bundled YouTube extractor stays up to date.
+  schedule:
+    - cron: "17 4 * * 1"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: melodia-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: melodia
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Latest NewPipeExtractor release
+        id: newpipe
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag=$(curl -fsSL -H "Authorization: Bearer $GH_TOKEN" https://api.github.com/repos/TeamNewPipe/NewPipeExtractor/releases/latest | jq -r .tag_name)
+          if [ -z "$tag" ] || [ "$tag" = "null" ]; then tag=v0.24.8; fi
+          echo "NewPipeExtractor $tag"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
+      - name: Unit tests (YouTube Music parser)
+        run: ./gradlew -p innertube test --no-daemon
+
+      - name: Build APK
+        run: ./gradlew :app:assembleRelease --no-daemon -PnewpipeVersion=${{ steps.newpipe.outputs.tag }} -PappVersionCode=${{ github.run_number }}
+
+      - name: Rename APK
+        run: cp app/build/outputs/apk/release/app-release.apk Melodia.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Melodia-apk
+          path: melodia/Melodia.apk
+
+      - name: Publish release
+        if: github.event_name != 'pull_request'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: melodia-v${{ github.run_number }}
+          name: Melodia 1.0.${{ github.run_number }}
+          target_commitish: ${{ github.sha }}
+          make_latest: true
+          body: |
+            Scarica **Melodia.apk** dal telefono e installalo (vedi melodia/README.md).
+            NewPipeExtractor: ${{ steps.newpipe.outputs.tag }}
+          files: melodia/Melodia.apk
