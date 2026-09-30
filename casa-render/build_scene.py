@@ -428,8 +428,8 @@ def mat_garage_door(name):
 
 def build_materials():
     M = {}
-    M["plaster_ext"] = mat_plaster("Intonaco esterno", (0.80, 0.78, 0.74), (0.86, 0.84, 0.80), 0.12)
-    M["roof"] = mat_plaster("Copertura", (0.80, 0.78, 0.74), (0.86, 0.84, 0.80), 0.12)
+    M["plaster_ext"] = mat_plaster("Intonaco esterno", (0.30, 0.25, 0.19), (0.34, 0.285, 0.22), 0.12)   # tortora
+    M["roof"] = mat_plaster("Copertura", (0.30, 0.25, 0.19), (0.34, 0.285, 0.22), 0.12)
     M["plaster_int"] = mat_plaster("Intonaco interno", (0.85, 0.84, 0.81), (0.88, 0.87, 0.84), 0.03)
     M["ceiling"] = mat_plaster("Soffitto", (0.86, 0.86, 0.85), (0.88, 0.88, 0.87), 0.01)
     M["oak"] = mat_planks("Parquet rovere", (0.42, 0.29, 0.17), (0.50, 0.36, 0.22))
@@ -448,6 +448,7 @@ def build_materials():
     M["grass_hair"] = mat_grass_hair("Erba")
     M["bark"] = mat_stone("Corteccia", (0.10, 0.08, 0.06), (0.20, 0.16, 0.12), rough=0.9, scale=30)
     M["frame"] = mat_plain("Alluminio antracite", (0.035, 0.037, 0.04), rough=0.4, metal=0.3)
+    M["frame_w"] = mat_plain("Alluminio bianco", (0.86, 0.86, 0.85), rough=0.35)
     M["glass"] = mat_glass("Vetro")
     M["garage"] = mat_garage_door("Portone garage")
     M["door_ext"] = mat_wood("Portoncino noce", (0.12, 0.07, 0.04), (0.20, 0.12, 0.07), rough=0.4)
@@ -477,14 +478,14 @@ def build_materials():
 # ---------------------------------------------------------------- muri
 
 TYPES = {"w": (0.9, 2.3), "w1": (1.0, 2.4), "wk": (1.1, 2.0), "wc": (1.00, 2.20),
-         "d": (0, 2.1), "g": (0, 2.4), "p": (0, 2.3), "sc": (0, 2.1)}
+         "d": (0, 2.1), "wh": (1.80, 2.25), "g": (0, 2.4), "p": (0, 2.3), "sc": (0, 2.1)}
 
 # [x1,y1,x2,y2,spessore,[[da,a,tipo],...], lato esterno (per perimetro) , estendi estremi]
 WALLS = [
     # perimetro
     [0.125, 0.125, 6.975, 0.125, EXT, [[1.65, 2.55, "w1"], [3.05, 3.95, "d"], [5.00, 6.30, "w"]], "N"],
     [6.975, 0.125, 6.975, 5.625, EXT, [], "E"],
-    [7.10, 5.625, 8.575, 5.625, EXT, [[7.30, 8.20, "d"]], "N"],
+    [7.10, 5.625, 8.575, 5.625, EXT, [[7.30, 8.20, "p"]], "N"],   # porta finestra bagno grande
     [8.575, 5.625, 8.575, 18.625, EXT, [], "E"],
     [4.125, 18.625, 8.575, 18.625, EXT, [[5.65, 7.05, "wc"]], "S"],   # finestra lavello 1,40 x 1,20, davanzale 1,00
     [4.125, 11.275, 4.125, 18.625, EXT, [[11.30, 12.30, "w"], [12.60, 13.60, "d"], [16.70, 17.90, "p"]], "W"],
@@ -508,7 +509,7 @@ WALLS = [
     # bagno grande e lavanderia
     [5.65, 5.65, 5.65, 9.40, INT, [[6.20, 7.10, "d"], [8.30, 9.20, "d"]], None],
     [5.60, 5.70, 7.10, 5.70, INT, [[5.70, 6.85, "d"]], None],
-    [5.70, 7.60, 8.45, 7.60, INT, [[7.70, 8.40, "d"]], None],
+    [5.70, 7.60, 8.45, 7.60, INT, [[7.70, 8.40, "wh"]], None],   # vasistas alto bagno/lavanderia
     [5.60, 9.40, 8.45, 9.40, INT, [], None],
     [4.50, 9.40, 5.60, 9.40, INT, [[4.50, 5.60, "sc"]], None],
     # cucina / soggiorno: apertura netta 1,80 m (estremi non estesi)
@@ -536,16 +537,16 @@ def window(horiz, fixed, a, b, t, z0, z1, side, kind):
     def fbox(m, s0, s1, zz0, zz1, th, o=0.0):
         wall_piece(m, horiz, fixed, s0, s1, th, zz0, zz1, off + o)
     # telaio perimetrale
-    fbox("frame", a, b, z1 - fw, z1, ft)
-    fbox("frame", a, b, z0, z0 + fw, ft)
-    fbox("frame", a, a + fw, z0, z1, ft)
-    fbox("frame", b - fw, b, z0, z1, ft)
+    fbox("frame_w", a, b, z1 - fw, z1, ft)
+    fbox("frame_w", a, b, z0, z0 + fw, ft)
+    fbox("frame_w", a, a + fw, z0, z1, ft)
+    fbox("frame_w", b - fw, b, z0, z1, ft)
     n = 2 if (b - a) > 1.05 else 1
     if kind == "d":
         n = 0
     for i in range(1, n):
         m = a + (b - a) * i / n
-        fbox("frame", m - fw * 0.8, m + fw * 0.8, z0, z1, ft)
+        fbox("frame_w", m - fw * 0.8, m + fw * 0.8, z0, z1, ft)
     fbox("glass", a + fw, b - fw, z0 + fw, z1 - fw, 0.024)
     # davanzale / soglia in pietra
     if side:
@@ -569,14 +570,20 @@ def add_walls():
         a0 = min(x1, x2) if horiz else min(y1, y2)
         a1 = max(x1, x2) if horiz else max(y1, y2)
         e = t / 2 - 0.0015 if extend else 0.0
-        mat = "plaster_ext" if t == EXT else "plaster_int"
+        sgn = {"N": -1, "S": 1, "E": 1, "W": -1}.get(side, 0)
+
+        def solid(pa, pb, z0, z1):
+            """Muratura: anima con intonaco interno + rivestimento esterno (tortora) sul lato verso fuori."""
+            wall_piece("plaster_int", horiz, fixed, pa, pb, t, z0, z1)
+            if sgn:
+                wall_piece("plaster_ext", horiz, fixed, pa, pb, 0.012, z0, z1, sgn * (t / 2 - 0.004))
         cur = a0 - e
         for a, b, k in sorted(ops):
             sill, top = TYPES[k]
-            wall_piece(mat, horiz, fixed, cur, a, t, 0, H)
+            solid(cur, a, 0, H)
             if sill > 0:
-                wall_piece(mat, horiz, fixed, a, b, t, 0, sill)
-            wall_piece(mat, horiz, fixed, a, b, t, top, H)
+                solid(a, b, 0, sill)
+            solid(a, b, top, H)
             if k[0] == "w" or k == "p":
                 window(horiz, fixed, a, b, t, sill, top, side, k)
             elif k == "g":
@@ -585,16 +592,16 @@ def add_walls():
             elif k == "d" and side:
                 door_leaf(horiz, fixed, a, b, t, top, side)
             cur = b
-        wall_piece(mat, horiz, fixed, cur, a1 + e, t, 0, H)
+        solid(cur, a1 + e, 0, H)
 
 
 def door_leaf(horiz, fixed, a, b, t, top, side):
     """Portoncino esterno: anta in noce con telaio antracite, chiusa."""
     sgn = {"N": -1, "S": 1, "E": 1, "W": -1}[side]
     off = sgn * (t / 2 - 0.1)
-    wall_piece("frame", horiz, fixed, a, a + 0.05, 0.08, 0, top, off)
-    wall_piece("frame", horiz, fixed, b - 0.05, b, 0.08, 0, top, off)
-    wall_piece("frame", horiz, fixed, a, b, 0.08, top - 0.05, top, off)
+    wall_piece("frame_w", horiz, fixed, a, a + 0.05, 0.08, 0, top, off)
+    wall_piece("frame_w", horiz, fixed, b - 0.05, b, 0.08, 0, top, off)
+    wall_piece("frame_w", horiz, fixed, a, b, 0.08, top - 0.05, top, off)
     wall_piece("door_ext", horiz, fixed, a + 0.05, b - 0.05, 0.06, 0.0, top - 0.05, off)
     # maniglione verticale in acciaio
     s = a + 0.14 if (b - a) > 0.95 else b - 0.14
@@ -799,7 +806,7 @@ def _leaf_mesh(pts, leaf, rng, mat, name):
     ob.data.materials.append(bpy.data.materials[mat])
 
 
-def lawn(rects, per_m2=3200, length=0.042):
+def lawn(rects, per_m2=3200, length=0.042, extra=()):
     verts, faces = [], []
     area = 0.0
     for x0, x1, y0, y1 in rects:
@@ -807,6 +814,15 @@ def lawn(rects, per_m2=3200, length=0.042):
         verts += [(x0, -y1, GROUND - 0.02), (x1, -y1, GROUND - 0.02), (x1, -y0, GROUND - 0.02), (x0, -y0, GROUND - 0.02)]
         faces.append((o, o + 1, o + 2, o + 3))
         area += (x1 - x0) * (y1 - y0)
+    for poly in extra:
+        o = len(verts)
+        verts += [(x, -y, GROUND - 0.02) for x, y in poly]
+        faces.append(tuple(reversed(range(o, o + len(poly)))))
+        a2 = 0.0
+        for i in range(len(poly)):
+            (xa, ya), (xb, yb) = poly[i], poly[(i + 1) % len(poly)]
+            a2 += xa * yb - xb * ya
+        area += abs(a2) / 2
     me = bpy.data.meshes.new("prato")
     me.from_pydata(verts, [], faces)
     ob = link(bpy.data.objects.new("prato", me))
@@ -843,13 +859,34 @@ LOT = (-3.8, 8.7, -3.1, 21.2)
 WALL_T = 0.25
 
 
+DRIVE = [(-3.8, 12.35), (0.3, 12.35), (2.42, 21.2), (-0.92, 21.2), (-3.4, 13.85), (-3.8, 13.3)]
+
+
+def slab(mat, pts, z0, z1):
+    """Lastra poligonale (convessa) in coordinate di pianta."""
+    v, f = _geo.setdefault((mat, 0.0), ([], []))
+    o = len(v)
+    n = len(pts)
+    v += [(x, -y, z0) for x, y in pts] + [(x, -y, z1) for x, y in pts]
+    f.append(tuple(o + i for i in range(n)))                 # sotto
+    f.append(tuple(o + n + i for i in reversed(range(n))))   # sopra
+    for i in range(n):
+        j = (i + 1) % n
+        f.append((o + i, o + n + i, o + n + j, o + j))
+
+
+def lawn_poly(polys):
+    """Aggiunge al prato superfici poligonali (usa lo stesso sistema di particelle)."""
+    lawn([], extra=polys)
+
+
 def add_exterior(M):
     x0, x1, y0, y1 = LOT
     t = WALL_T
     # terreno oltre il lotto
     box("grass", -60, 70, -60, 80, GROUND - 0.3, GROUND - 0.02)
     # prato del lotto (con fili d'erba)
-    lawn([(-0.3, 2.9, 12.35, y1), (2.9, 3.4, 19.85, y1), (4.4, x1, 19.85, y1),
+    lawn([(3.95, x1, 19.85, 20.15),
           (x0, x1, y0, -1.0), (x0, 2.8, -1.0, 0.0), (4.2, x1, -1.0, 0.0),
           (x0, 0.0, 0.0, 4.25), (x0, -1.9, 4.25, 5.25), (-0.5, 0.0, 4.25, 5.25),
           (7.1, x1, 0.0, 4.5)])
@@ -857,14 +894,22 @@ def add_exterior(M):
     box("paving", -3.8, 4.0, 11.15, 12.35, GROUND - 0.02, GROUND + 0.02)      # fronte garage/camera
     box("paving", 2.9, 4.0, 12.35, 18.75, GROUND - 0.02, GROUND + 0.02)       # lungo la facciata d'ingresso
     box("paving", 2.9, 8.7, 18.75, 19.85, GROUND - 0.02, GROUND + 0.02)       # fronte cucina
-    box("paving", 3.4, 4.4, 19.85, y1, GROUND - 0.02, GROUND + 0.02)          # dal cancelletto
-    box("drive", -3.8, -0.3, 12.35, y1, GROUND - 0.02, GROUND + 0.015)        # passo carrabile
+    box("paving", 2.95, 3.95, 19.85, y1, GROUND - 0.02, GROUND + 0.02)        # dal cancelletto
+    # passo carrabile in diagonale dal cancello al garage (linea tratteggiata della piantina)
+    slab("drive", DRIVE, GROUND - 0.02, GROUND + 0.015)
+    lawn_poly([[(-3.8, 13.3), (-3.4, 13.85), (-0.92, y1), (-3.8, y1)],
+               [(0.3, 12.35), (2.9, 12.35), (2.9, y1), (2.42, y1)]])
+    # fioriera in muratura lungo il muro su strada davanti alla cucina
+    for bx in ((4.15, 8.7, 20.15, 20.27), (4.15, 4.27, 20.15, y1)):
+        box("plaster_ext", bx[0], bx[1], bx[2], bx[3], GROUND, GROUND + 0.35)
+    box("bark", 4.27, 8.7, 20.27, y1, GROUND, GROUND + 0.28)
     box("paving", 2.8, 4.2, -1.0, 0.0, GROUND - 0.02, GROUND + 0.02)          # uscita sul retro (disimpegno)
     box("paving", 7.1, 8.7, 4.5, 5.5, GROUND - 0.02, GROUND + 0.02)           # porta finestra bagno grande
     box("paving", -1.9, -0.5, 4.25, 5.25, GROUND - 0.02, GROUND + 0.02)       # porta posteriore garage
     # muri di confine: su strada (sud) h 1,20 con cancelli, laterali e retro h 1,80
     hs, hb = 1.2, 1.8
-    gates = ((-3.6, -0.6), (3.4, 4.4))            # carrabile davanti al garage, pedonale a 7,2 m dal muro sinistro
+    # dalla piantina: carrabile 2,90 m, pilastro 0,50 m, pedonale 1,00 m (centro a ~7,2 m dal muro sinistro)
+    gates = ((-0.47, 2.42), (2.95, 3.95))
     segs = [(x0 - t, gates[0][0]), (gates[0][1], gates[1][0]), (gates[1][1], x1 + t)]
     for a_, b_ in segs:
         box("plaster_ext", a_, b_, y1, y1 + t, GROUND, GROUND + hs)
@@ -892,7 +937,8 @@ def add_exterior(M):
     for i, xx in enumerate([-3.0, -1.0, 1.0, 5.5, 7.6]):
         blob("Siepe", (xx, -2.5, GROUND + 0.4), 0.55, seed=50 + i, squash=0.8, leaf=0.05)
     # alberi (uno al centro del giardino come nella piantina, uno sul retro) + contesto fuori lotto
-    tree(0.2, 19.9, h=4.6, r=1.5, seed=3)
+    tree(1.55, 15.2, h=4.6, r=1.5, seed=3)       # albero del giardino, come nella piantina
+    tree(-2.7, 19.9, h=3.6, r=1.0, seed=6)       # al posto della palma, nell'aiuola a sinistra
     tree(-2.2, 1.6, h=4.2, r=1.4, seed=4)
     tree(-2.6, 25.5, h=5.0, r=1.8, seed=5)
     tree(12.5, 8.0, h=6.0, r=2.4, seed=7)
@@ -949,6 +995,65 @@ def chair(x, y, facing):
         box("chair", x, x + 0.05, y + 0.01, y + w - 0.01, 0.50, 0.86, bevel=0.015)
 
 
+def bed(x, y, w, d, head, headboard=False):
+    """Letto con rete, materasso e cuscini; head = lato della testiera (N/S/E/W della piantina)."""
+    box("walnut", x, x + w, y, y + d, 0.06, 0.30, bevel=0.01)
+    box("linen", x + 0.02, x + w - 0.02, y + 0.02, y + d - 0.02, 0.30, 0.52, bevel=0.05)
+    n = 2 if max(w, d) >= 1.9 and min(w, d) >= 1.4 else 1
+    # head: lato dei cuscini. "E" = lato x minimo, "W" = lato x massimo, "S" = y minimo, "N" = y massimo
+    if head == "E":
+        cx0, cx1 = x + 0.06, x + 0.50
+        span = [(y + 0.08 + i * (d - 0.16) / n, y + 0.08 + (i + 1) * (d - 0.16) / n - 0.04) for i in range(n)]
+        for a, b in span:
+            box("linen", cx0, cx1, a, b, 0.52, 0.66, bevel=0.06)
+        if headboard:
+            box("walnut", x - 0.04, x, y - 0.05, y + d + 0.05, 0.0, 1.05, bevel=0.003)
+    elif head == "W":      # testiera sul lato x massimo
+        cx0, cx1 = x + w - 0.50, x + w - 0.06
+        box("linen", cx0, cx1, y + 0.08, y + d - 0.08, 0.52, 0.66, bevel=0.06)
+    elif head == "S":      # testiera sul lato y minimo
+        box("linen", x + 0.08, x + w - 0.08, y + 0.06, y + 0.50, 0.52, 0.66, bevel=0.06)
+    else:
+        box("linen", x + 0.08, x + w - 0.08, y + d - 0.50, y + d - 0.06, 0.52, 0.66, bevel=0.06)
+
+
+def desk(x0, x1, y0, y1, along="y"):
+    """Scrivania in rovere con due fianchi."""
+    box("oak_furn", x0, x1, y0, y1, 0.72, 0.75, bevel=0.003)
+    if along == "y":
+        box("oak_furn", x0, x1, y0, y0 + 0.03, 0, 0.72)
+        box("oak_furn", x0, x1, y1 - 0.03, y1, 0, 0.72)
+    else:
+        box("oak_furn", x0, x0 + 0.03, y0, y1, 0, 0.72)
+        box("oak_furn", x1 - 0.03, x1, y0, y1, 0, 0.72)
+
+
+def vanity(x0, x1, y0, y1, wall):
+    """Mobile bagno sospeso con lavabo d'appoggio, rubinetto e specchio; wall = lato del muro (N/S)."""
+    box("walnut", x0, x1, y0, y1, 0.42, 0.85, bevel=0.004)
+    cx = (x0 + x1) / 2
+    box("ceramic", cx - 0.25, cx + 0.25, y0 + 0.05, y1 - 0.05, 0.85, 0.97, bevel=0.03)
+    if wall == "S":        # muro sul lato y massimo
+        box("steel", cx - 0.02, cx + 0.02, y1 - 0.06, y1 - 0.02, 0.97, 1.15)
+        box("steel", cx - 0.02, cx + 0.02, y1 - 0.20, y1 - 0.02, 1.12, 1.15)
+        box("mirror", x0 + 0.05, x1 - 0.05, y1 - 0.02, y1, 1.05, 1.75)
+    else:
+        box("steel", cx - 0.02, cx + 0.02, y1 - 0.06, y1 - 0.02, 0.97, 1.15)
+        box("steel", cx - 0.02, cx + 0.02, y1 - 0.20, y1 - 0.02, 1.12, 1.15)
+        box("mirror", x0 + 0.05, x1 - 0.05, y1 - 0.02, y1, 1.00, 1.72)
+
+
+def tv_wardrobe(x0, x1, y0, y1, yc, niche=1.10):
+    """Armadio a parete con vano a giorno al centro per la TV (ante verso -x)."""
+    a, b = yc - niche / 2, yc + niche / 2
+    cabinets(x0, x1, y0, a, 0, 2.40, "y", 2, mat="lacquer_w", plinth=0.05)
+    cabinets(x0, x1, b, y1, 0, 2.40, "y", 2, mat="lacquer_w", plinth=0.05)
+    cabinets(x0 + 0.15, x1, a, b, 0, 0.55, "y", 2, mat="walnut", plinth=0.05)   # cassettoni sotto la TV
+    cabinets(x0, x1, a, b, 1.75, 2.40, "y", 2, mat="lacquer_w", plinth=0)       # pensile sopra
+    box("walnut", x1 - 0.02, x1, a, b, 0.55, 1.75)                              # fondo del vano
+    box("tv", x1 - 0.06, x1 - 0.02, yc - 0.49, yc + 0.49, 0.90, 1.47, bevel=0.003)   # TV 43"
+
+
 def pendant(x, y, z_bottom=1.55):
     bpy.ops.mesh.primitive_cylinder_add(vertices=48, radius=0.13, depth=0.20,
                                         location=(x, -y, z_bottom + 0.11), end_fill_type="NOTHING")
@@ -990,12 +1095,16 @@ def add_furniture():
     B("ceramic", 6.30, 7.35, 0.36, 0.20, 0.8, bevel=0.03)
     B("ceramic", 6.30, 6.90, 0.36, 0.45, 0.4, bevel=0.05)
     B("ceramic", 6.95, 7.00, 0.36, 0.55, 0.4, bevel=0.05)
-    B("oak_furn", 7.40, 7.10, 0.70, 0.45, 0.35, 0.5, bevel=0.005)
-    # --- bagno piccolo
-    B("oak_furn", 0.45, 1.85, 0.60, 0.45, 0.35, 0.5, bevel=0.005)
-    B("ceramic", 1.55, 1.85, 0.36, 0.20, 0.8, bevel=0.03)
-    B("ceramic", 1.55, 2.05, 0.36, 0.45, 0.4, bevel=0.05)
-    B("ceramic", 2.05, 1.85, 0.36, 0.55, 0.4, bevel=0.05)
+    vanity(7.45, 8.35, 7.08, 7.55, "N")                                        # mobile 90 cm sotto il vasistas
+    # --- bagno piccolo: doccia in fondo sotto la finestra, sanitari e mobiletto
+    box("ceramic", 0.27, 1.25, 1.87, 3.53, 0.0, 0.04, bevel=0.01)              # piatto doccia 98 x 166
+    box("glass", 1.25, 1.27, 1.87, 2.93, 0.04, 2.00)                           # vetro fisso (ingresso 60 cm)
+    box("steel", 0.27, 0.30, 2.60, 2.64, 1.00, 2.05)                           # colonna doccia
+    box("steel", 0.27, 0.45, 2.52, 2.72, 2.03, 2.05)
+    B("ceramic", 1.45, 1.85, 0.36, 0.20, 0.8, bevel=0.03)                      # wc
+    B("ceramic", 1.45, 2.05, 0.36, 0.45, 0.4, bevel=0.05)
+    B("ceramic", 1.95, 1.85, 0.36, 0.55, 0.4, bevel=0.05)                      # bidet
+    vanity(1.35, 1.95, 3.10, 3.55, "S")                                        # mobiletto 60 cm
     # --- w.c. garage
     B("ceramic", -2.30, 5.50, 0.36, 0.20, 0.8, bevel=0.03)
     B("ceramic", -2.30, 5.70, 0.36, 0.45, 0.4, bevel=0.05)
@@ -1006,12 +1115,16 @@ def add_furniture():
     B("lacquer", 6.40, 8.85, 0.9, 0.5, 0.85, bevel=0.005)
 
     # --- cucina (lineare sul muro est + lavello sotto il finestrone sud)
-    cabinets(7.85, 8.45, 14.72, 15.43, 0, 2.30, "y", 1, plinth=0.1)            # colonna frigo
-    cabinets(7.85, 8.45, 15.45, 18.45, 0, 0.86, "y", 5)                        # basi lato est
-    box("top_stone", 7.82, 8.45, 15.45, 18.45, 0.86, 0.90, bevel=0.002)
+    cabinets(7.85, 8.45, 14.56, 15.18, 0, 2.30, "y", 1, plinth=0.1)            # colonna frigo nell'angolo verso la vetrata
+    cabinets(7.85, 8.45, 15.19, 15.80, 0, 2.30, "y", 1, plinth=0.1)            # colonna forno + microonde
+    box("black_glass", 7.835, 7.85, 15.24, 15.75, 0.80, 1.40)                  # forno
+    box("steel", 7.815, 7.835, 15.28, 15.71, 1.36, 1.38)
+    box("black_glass", 7.835, 7.85, 15.24, 15.75, 1.46, 1.84)                  # microonde
+    cabinets(7.85, 8.45, 15.82, 18.45, 0, 0.86, "y", 4)                        # basi lato est
+    box("top_stone", 7.82, 8.45, 15.82, 18.45, 0.86, 0.90, bevel=0.002)
     cabinets(5.00, 7.85, 17.90, 18.50, 0, 0.86, "x", 5)                        # basi lato sud
     box("top_stone", 5.00, 7.82, 17.87, 18.50, 0.86, 0.90, bevel=0.002)
-    box("top_stone", 8.43, 8.45, 15.45, 18.45, 0.90, 1.45)                     # alzatina
+    box("top_stone", 8.43, 8.45, 15.82, 18.45, 0.90, 1.45)                     # alzatina
     box("top_stone", 5.00, 8.45, 18.48, 18.50, 0.90, 1.00)                     # alzatina sotto il davanzale
     B("steel", 6.05, 17.95, 0.70, 0.45, 0.012, 0.9)                            # lavello
     B("black_matte", 6.08, 17.98, 0.64, 0.39, 0.012, 0.892)
@@ -1019,10 +1132,10 @@ def add_furniture():
     box("steel", 6.82, 6.86, 18.08, 18.12, 0.90, 1.22)
     box("steel", 6.58, 6.86, 18.08, 18.12, 1.18, 1.22)
     B("black_glass", 7.90, 16.90, 0.55, 0.58, 0.006, 0.9)                      # piano cottura
-    cabinets(8.10, 8.45, 15.45, 16.80, 1.45, 2.20, "y", 2, plinth=0)            # pensili
+    cabinets(8.10, 8.45, 15.82, 16.80, 1.45, 2.20, "y", 1, plinth=0)            # pensili
     cabinets(8.10, 8.45, 17.55, 18.45, 1.45, 2.20, "y", 1, plinth=0)
     box("steel", 8.05, 8.45, 16.85, 17.50, 1.62, 1.70, bevel=0.003)            # cappa sottopensile
-    box("led", 8.11, 8.13, 15.46, 16.79, 1.44, 1.45)
+    box("led", 8.11, 8.13, 15.83, 16.79, 1.44, 1.45)
     # angolo pranzo: porta finestra spostata a 60 cm dall'angolo (a filo dei mobili del lavello),
     # 2,15 m di muro libero -> divanetto a panca 200 cm, tavolo 160 x 85, 2 sedie: 5 posti.
     # Passaggio dall'apertura di 1,80 m: libero tra y 14,55 e 15,45 davanti alla colonna frigo.
@@ -1068,6 +1181,11 @@ def add_furniture():
                    (7.77, SY - 1.62), (8.40, SY - 1.62)):
         B("black_matte", px, py, 0.04, 0.04, 0.14)
     box("rug", 5.95, 8.20, 10.25, 12.35, 0.0, 0.012, bevel=0.004)
+    # credenza alta dietro il divano: 180 x 40 x 200 cm, ante verso il passaggio
+    box("black_matte", 6.40, 8.10, 12.55, 12.90, 0.0, 0.08)
+    for i in range(4):
+        xa = 6.35 + i * 0.45
+        box("walnut", xa + 0.002, xa + 0.448, 12.53, 12.93, 0.08, 2.00, bevel=0.003)
     potted_plant(4.85, 11.75, 1.6, seed=13)
     # lampada da terra ad arco accanto al divano
     box("black_matte", 5.60, 5.85, SY - 0.35, SY - 0.10, 0.0, 0.03)
@@ -1111,31 +1229,30 @@ def add_furniture():
     B("mirror", 4.55, 14.42, 0.80, 0.02, 1.05, 0.98, bevel=0.002)
     B("black_matte", 4.54, 14.435, 0.82, 0.01, 1.07, 0.97)
 
-    # --- camera
-    B("walnut", 0.30, 8.10, 0.06, 1.60, 1.05, 0.0, bevel=0.003)               # testiera
-    B("walnut", 0.36, 8.10, 1.96, 1.60, 0.25, 0.06, bevel=0.01)
-    B("linen", 0.38, 8.12, 1.90, 1.56, 0.20, 0.31, bevel=0.05)
-    B("linen", 0.42, 8.20, 0.45, 0.62, 0.14, 0.50, bevel=0.06)
-    B("linen", 0.42, 8.95, 0.45, 0.62, 0.14, 0.50, bevel=0.06)
-    B("walnut", 0.30, 7.65, 0.40, 0.40, 0.45, bevel=0.005)
-    B("walnut", 0.30, 9.75, 0.40, 0.40, 0.45, bevel=0.005)
-    cabinets(3.62, 4.22, 7.80, 10.00, 0, 2.3, "y", 4, mat="lacquer_w", plinth=0.05)
-    # --- cameretta
-    B("oak_furn", 5.95, 1.10, 0.9, 2.0, 0.3, bevel=0.01)
-    B("linen", 5.97, 1.12, 0.86, 1.96, 0.2, 0.3, bevel=0.04)
-    B("linen", 6.05, 1.15, 0.6, 0.4, 0.12, 0.5, bevel=0.05)
-    cabinets(4.20, 4.80, 0.85, 2.65, 0, 2.3, "y", 3, mat="lacquer_w", plinth=0.05)
-    B("oak_furn", 5.00, 0.30, 1.2, 0.6, 0.04, 0.72, bevel=0.003)
-    B("oak_furn", 5.00, 0.30, 0.04, 0.6, 0.72)
-    B("oak_furn", 6.16, 0.30, 0.04, 0.6, 0.72)
-    # --- studio
-    B("oak_furn", 0.30, 4.10, 0.7, 1.4, 0.04, 0.72, bevel=0.003)
-    B("oak_furn", 0.30, 4.10, 0.7, 0.04, 0.72)
-    B("oak_furn", 0.30, 5.46, 0.7, 0.04, 0.72)
-    B("chair", 1.10, 4.55, 0.45, 0.45, 0.45, bevel=0.02)
-    B("oak_furn", 0.90, 3.70, 1.6, 0.35, 1.9, bevel=0.003)
-    # --- ripostiglio + pilastro
-    B("oak_furn", 0.30, 0.50, 0.35, 1.10, 1.9, bevel=0.003)
+    # --- camera: armadio sul muro della porta, letto spostato di 45 cm verso la finestra,
+    #     armadio con vano TV al centro sul muro di fronte al letto
+    cabinets(0.25, 2.95, 6.90, 7.50, 0, 2.40, "x", 4, mat="lacquer_w", plinth=0.05)
+    bed(0.30, 8.55, 2.00, 1.60, "E", headboard=True)                            # letto 160 x 200, testiera a muro
+    B("walnut", 0.30, 8.10, 0.40, 0.40, 0.45, bevel=0.005)                     # comodini
+    B("walnut", 0.30, 10.20, 0.40, 0.40, 0.45, bevel=0.005)
+    tv_wardrobe(3.65, 4.25, 7.95, 10.85, 9.35)
+    # --- cameretta doppia: due letti in fila sul muro destro con armadio a ponte, due scrivanie
+    bed(5.95, 0.30, 0.90, 2.00, "S")
+    bed(5.95, 2.35, 0.90, 2.00, "S")
+    cabinets(6.45, 6.85, 0.30, 4.35, 1.80, 2.40, "y", 6, mat="lacquer_w", plinth=0)   # ponte sopra i letti
+    for ya in (0.30, 1.50):
+        desk(4.15, 4.75, ya, ya + 1.18)
+        chair(4.80, ya + 0.37, "W")
+    # --- studio (ex ripostiglio): scrivania sotto la finestra, armadietto, sedia
+    desk(1.05, 2.35, 0.25, 0.85, along="x")
+    chair(1.48, 0.95, "N")
+    cabinets(0.28, 0.88, 0.28, 1.20, 0, 2.00, "y", 2, mat="lacquer_w", plinth=0.05)
+    # --- cameretta singola (ex studio): letto sotto parete alta, scrivania sotto la finestra, armadio
+    bed(0.85, 3.70, 2.00, 0.90, "W")
+    desk(0.28, 0.83, 4.70, 5.90)
+    chair(0.88, 5.08, "W")
+    cabinets(0.28, 1.90, 6.05, 6.65, 0, 2.30, "x", 3, mat="lacquer_w", plinth=0.05)
+    # --- pilastro nel ripostiglio accanto alla doccia
     B("plaster_int", 4.15, 5.20, 0.27, 0.45, 2.7)
 
 # ---------------------------------------------------------------- luce e camere
@@ -1233,7 +1350,7 @@ CAMERAS = {
     # nome: (posizione pianta x,y,z), (target x,y,z), lente mm, esposizione
     "ext_ingresso": ((-2.4, 20.8, 1.6), (3.6, 12.6, 1.5), 20, -0.25),
     "ext_aerea": ((-11.5, 30.5, 12.5), (3.0, 10.0, 0.5), 28, -0.25),
-    "int_soggiorno": ((4.75, 14.15, 1.45), (7.6, 9.9, 1.05), 17, 1.7),
+    "int_soggiorno": ((5.3, 13.45, 1.45), (7.3, 9.9, 1.05), 17, 1.7),
     "int_divano": ((5.15, 9.95, 1.35), (7.3, 13.9, 0.95), 16, 1.7),
     "int_cucina": ((7.45, 17.45, 1.5), (4.5, 15.0, 1.0), 16, 1.5),
     "ext_retro": ((-3.4, -2.8, 1.65), (3.5, 3.0, 1.3), 18, -0.25),
@@ -1334,6 +1451,7 @@ PANOS = {
     "camera": (2.75, 10.1, 1.55),
     "giardino": (1.1, 17.4, 1.55),
     "retro": (-1.0, -1.3, 1.6),
+    "studiolo": (2.35, 1.35, 1.55),
     "cameretta": (5.3, 3.4, 1.55),
     "studio": (1.9, 5.4, 1.55),
     "bagno_grande": (7.0, 6.3, 1.55),
@@ -1343,7 +1461,7 @@ PANOS = {
     "garage": (-1.8, 8.9, 1.55),
 }
 PANO_EXPOSURE = {"giardino": -0.25, "retro": -0.25, "garage": 2.8, "bagno_grande": 2.3, "bagno_piccolo": 2.1,
-                 "lavanderia": 2.3, "corridoio": 2.2, "studio": 1.8, "cameretta": 1.6}
+                 "lavanderia": 2.3, "corridoio": 2.2, "studio": 1.8, "cameretta": 1.6, "studiolo": 1.9}
 # facce del cubo: (nome, direzione, "alto" dell'immagine) in coordinate Blender
 FACES = [("n", (0, 1, 0), (0, 0, 1)), ("e", (1, 0, 0), (0, 0, 1)), ("s", (0, -1, 0), (0, 0, 1)),
          ("w", (-1, 0, 0), (0, 0, 1)), ("u", (0, 0, 1), (0, -1, 0)), ("d", (0, 0, -1), (0, 1, 0))]

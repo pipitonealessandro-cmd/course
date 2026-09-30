@@ -102,3 +102,18 @@ modello e per non riproporre opzioni già scartate.
   a filo dei mobili del lavello (y 16,70-17,90). Muro libero verso la vetrata: 2,15 m. Angolo pranzo
   aggiornato: divanetto a panca 200 cm, tavolo 160 x 85, 2 sedie lato mobili = 5 posti; TV 32" invariata.
   Scartato lo spostamento verso la vetrata (sovrapponeva passaggi e toglieva il posto alla TV).
+
+## Revisione con 12 modifiche (Claude Code)
+
+1. Facciate **tortora**, infissi esterni **bianchi** (portoncino in noce con telaio bianco; cancelli e portone garage antracite).
+2. Cucina: **frigo in colonna nell'angolo verso la vetrata** + **colonna forno/microonde** accanto; basi, alzatina e pensili accorciati di conseguenza.
+3. Soggiorno: **credenza alta 180 x 40 x 200 cm** dietro il divano (ante verso il passaggio; restano ~1,5 m verso la vetrata).
+4. Camera: **armadio sul muro della porta** (2,70 m, lascia libera l'anta); **letto 160 x 200 spostato di 45 cm verso la finestra**; sul muro di fronte al letto **armadio con vano TV** centrale (TV 43").
+5. Tra bagno grande e lavanderia: la porta diventa una **finestrella alta a vasistas** (h 1,80-2,25); la lavanderia si raggiunge solo dal corridoio.
+6. Bagno grande: l'apertura verso il retro è una **porta finestra** (luce naturale); **mobile sospeso 90 cm** con lavabo e specchio sotto il vasistas.
+7. Cameretta → **cameretta doppia**: due letti 90 x 200 in fila sul muro destro con **armadio a ponte** sopra, **due scrivanie** sul muro della porta.
+8. Ripostiglio in alto → **studio**: scrivania sotto la finestra, sedia, armadietto 60 x 90.
+9. Bagno piccolo: **doccia in fondo sotto la finestra** (piatto ~100 x 166, vetro fisso), wc e bidet, **mobiletto 60 cm**.
+10. Studio → **cameretta singola**: letto 90 x 200, scrivania sotto la finestra, armadio 1,60 m.
+11. **Cancelli dalla piantina**: carrabile ~2,90 m (x -0,47..2,42), pilastro ~0,50 m, pedonale ~1,00 m (x 2,95..3,95; centro a ~7,2 m dal muro sinistro). Passo carrabile **in diagonale** dal cancello al garage (linea tratteggiata), aiuola triangolare a sinistra (palma), **fioriera** in muratura lungo il muro su strada davanti alla cucina, albero nel giardino come in piantina.
+12. Visore: **sagoma di persona alta 1,75 m** trascinabile tra gli ambienti.

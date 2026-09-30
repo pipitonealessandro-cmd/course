@@ -113,12 +113,13 @@ figcaption b{color:var(--ink);font-weight:650;margin-right:6px}
       <div class="compass" id="compass" title="Nord reale" aria-label="Bussola"><svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="18"/><path class="n" d="M20 5 L25 20 L15 20 Z"/><path class="s" d="M20 35 L25 20 L15 20 Z"/><text x="20" y="4.5">N</text></svg></div>
       <div class="room" id="roomInfo" hidden><b id="roomName"></b><span id="roomDim"></span></div>
       <div class="dock">
-        <div class="hint" id="hint">Trascina per ruotare · pizzica o rotella per zoomare · due dita per spostare</div>
+        <div class="hint" id="hint">Trascina per ruotare · pizzica o rotella per zoomare · trascina la persona per spostarla</div>
         <div class="row" id="views"></div>
         <div class="row">
           <button class="chip toggle" id="tRoof">Tetto</button>
           <button class="chip toggle on" id="tLabels">Nomi e misure</button>
           <button class="chip toggle" id="tWalk">Passeggia</button>
+          <button class="chip toggle on" id="tPerson">Persona 1,75 m</button>
         </div>
       </div>
     </section>
@@ -150,9 +151,9 @@ figcaption b{color:var(--ink);font-weight:650;margin-right:6px}
 // ---------------------------------------------------------------- dati della casa (metri; x = destra della piantina = nord, y = basso = est)
 var ROOMS=[
   ['Soggiorno',6.4,11.6,'3,95 × 5,05 m'],['Cucina',6.35,16.3,'4,20 × 4,00 m'],
-  ['Camera',2.25,8.9,'4,00 × 4,00 m'],['Cameretta',5.5,2.4,'2,70 × 4,30 m'],
-  ['Studio',1.55,5.25,'≈ 2,60 × 3,00 m'],['Bagno piccolo',1.55,2.7,'2,60 × 1,70 m'],
-  ['Ripostiglio',1.55,1.0,'≈ 2,60 × 1,50 m'],['Bagno grande',7.05,6.4,'2,75 × 1,80 m'],
+  ['Camera',2.25,8.9,'4,00 × 4,00 m'],['Cameretta doppia',5.5,2.4,'2,70 × 4,30 m'],
+  ['Cameretta singola',1.55,5.25,'≈ 2,60 × 3,00 m'],['Bagno piccolo',1.55,2.7,'2,60 × 1,70 m'],
+  ['Studio',1.55,1.0,'≈ 2,60 × 1,50 m'],['Bagno grande',7.05,6.4,'2,75 × 1,80 m'],
   ['Lavanderia',7.1,8.4,'≈ 2,75 × 1,70 m'],['Garage',-1.8,8.9,'3,55 × 4,10 m'],
   ['Corridoio',3.5,4.0,'largo 1,10 m'],['Doccia',6.2,5.15,'1,30 × 1,00 m'],['W.C.',-2.7,6.1,'1,70 × 1,20 m']
 ];
@@ -161,11 +162,12 @@ var VIEWS={
   pianta:{label:'Interni dall\'alto',orbit:true,roof:false,pos:[2.4,21,20.5],target:[2.4,0,9.5]},
   soggiorno:{label:'Soggiorno',walk:true,pos:[4.8,14.1],look:[7.6,9.9],room:0},
   cucina:{label:'Cucina',walk:true,pos:[7.3,17.3],look:[4.6,15.0],room:1},
-  camera:{label:'Camera',walk:true,pos:[3.2,10.5],look:[0.6,8.4],room:2},
-  cameretta:{label:'Cameretta',walk:true,pos:[5.2,3.9],look:[6.4,1.5],room:3},
-  studio:{label:'Studio',walk:true,pos:[2.2,6.0],look:[0.6,4.5],room:4},
+  camera:{label:'Camera',walk:true,pos:[3.2,8.2],look:[0.5,9.6],room:2},
+  cameretta:{label:'Cameretta doppia',walk:true,pos:[5.3,4.2],look:[5.6,0.5],room:3},
+  studio:{label:'Cameretta singola',walk:true,pos:[2.3,6.2],look:[0.6,4.3],room:4},
+  studiolo:{label:'Studio',walk:true,pos:[2.55,1.45],look:[0.6,0.5],room:6,pitch:-0.2},
   bagnog:{label:'Bagno grande',walk:true,pos:[8.1,5.95],look:[6.5,7.3],room:7,pitch:-0.35},
-  bagnop:{label:'Bagno piccolo',walk:true,pos:[2.6,3.35],look:[1.2,2.0],room:5,pitch:-0.35},
+  bagnop:{label:'Bagno piccolo',walk:true,pos:[2.7,3.3],look:[0.4,2.6],room:5,pitch:-0.2},
   lavanderia:{label:'Lavanderia',walk:true,pos:[6.0,7.9],look:[8.3,8.9],room:8,pitch:-0.25},
   corridoio:{label:'Corridoio',walk:true,pos:[3.5,1.0],look:[3.5,6.0],room:10},
   garage:{label:'Garage',walk:true,pos:[-0.6,10.4],look:[-2.8,6.5],room:9},
@@ -176,11 +178,12 @@ var QUICK=['esterno','pianta'];
 var PANOS=[
   {id:'soggiorno',name:'Soggiorno',dim:'3,95 × 5,05 m · divano Tosaro 240 × 165',yaw:35},
   {id:'cucina',name:'Cucina',dim:'4,20 × 4,00 m · divanetto 200, tavolo 160 × 85',yaw:-110},
-  {id:'camera',name:'Camera',dim:'4,00 × 4,00 m',yaw:-50},
-  {id:'cameretta',name:'Cameretta',dim:'2,70 × 4,30 m',yaw:40},
-  {id:'studio',name:'Studio',dim:'≈ 2,60 × 3,00 m',yaw:-65},
-  {id:'bagno_grande',name:'Bagno grande',dim:'2,75 × 1,80 m · doccia 1,30 × 1,00',yaw:160},
-  {id:'bagno_piccolo',name:'Bagno piccolo',dim:'2,60 × 1,70 m',yaw:-30},
+  {id:'camera',name:'Camera',dim:'4,00 × 4,00 m · armadio con vano TV',yaw:-50},
+  {id:'cameretta',name:'Cameretta doppia',dim:'2,70 × 4,30 m · due letti, armadio a ponte',yaw:40},
+  {id:'studio',name:'Cameretta singola',dim:'≈ 2,60 × 3,00 m',yaw:-65},
+  {id:'studiolo',name:'Studio',dim:'≈ 2,60 × 1,50 m · scrivania sotto la finestra',yaw:-80},
+  {id:'bagno_grande',name:'Bagno grande',dim:'2,75 × 1,80 m · porta finestra, doccia 1,30 × 1,00',yaw:160},
+  {id:'bagno_piccolo',name:'Bagno piccolo',dim:'2,60 × 1,70 m · doccia sotto la finestra',yaw:-90},
   {id:'lavanderia',name:'Lavanderia',dim:'≈ 2,75 × 1,70 m',yaw:115},
   {id:'corridoio',name:'Corridoio',dim:'largo 1,10 m',yaw:180},
   {id:'garage',name:'Garage',dim:'3,55 × 4,10 m',yaw:180},
@@ -369,13 +372,13 @@ function initThree(){
     if(o.e){m.emissive=new THREE.Color(o.e);m.emissiveIntensity=o.ei||1;}
     return m;}
   var MAT={
-    'Intonaco esterno':M({c:0xe8e5df,r:0.95}),'Copertura':M({c:0xe8e5df,r:0.95}),
+    'Intonaco esterno':M({c:0x9e907e,r:0.95}),'Copertura':M({c:0x9e907e,r:0.95}),
     'Intonaco interno':M({c:0xf1efea,r:0.95}),'Soffitto':M({c:0xf4f3f0,r:0.95}),
     'Parquet rovere':M({t:T.oak,r:0.55}),'Parquet rovere Y':M({t:T.oak,r:0.55,rot:true}),
     'Gres 120x60':M({t:T.porc,r:0.35}),'Gres bagno':M({t:T.bath,r:0.4}),
     'Cemento':M({c:0x8b8b88,r:0.9}),'Soglia pietra':M({c:0xb8b2a8,r:0.6}),'Zoccolo pietra':M({c:0x3b3b3a,r:0.8}),
     'Pavimentazione esterna':M({t:T.pave,r:0.85}),'Masselli vialetto':M({t:T.drive,r:0.9}),
-    'Alluminio antracite':M({c:0x2a2c2f,r:0.45,m:0.4}),'Portone garage':M({c:0x2c2e31,r:0.5,m:0.3}),
+    'Alluminio antracite':M({c:0x2a2c2f,r:0.45,m:0.4}),'Alluminio bianco':M({c:0xefefec,r:0.4}),'Portone garage':M({c:0x2c2e31,r:0.5,m:0.3}),
     'Portoncino noce':M({c:0x5a3b25,r:0.5}),'Noce':M({c:0x5e3f27,r:0.5}),'Rovere mobili':M({c:0xa37b52,r:0.55}),
     'Laccato greige':M({c:0xc8c1b6,r:0.4}),'Laccato bianco':M({c:0xecebe7,r:0.35}),
     'Top gres scuro':M({c:0x1c1c1c,r:0.3}),'Ceramica':M({c:0xf6f6f4,r:0.15}),
@@ -450,7 +453,7 @@ function initThree(){
     g.rotation.x=-Math.PI/2; g.position.set(2.5,-0.135,10); g.receiveShadow=true;
     var uv=g.geometry.attributes.uv; for(var i=0;i<uv.count;i++){uv.setXY(i,uv.getX(i)*100,uv.getY(i)*100);}
     scene.add(g); floors.push(g);
-    var trees=[[0.2,19.9,4.6,1.5],[-2.2,1.6,4.2,1.4],[-2.6,25.5,5,1.8],[12.5,8,6,2.4],[-8,3,6.5,2.6],[-9.5,14,7,2.8],[15,18,6.5,2.5],[18,-2,8,3],[-6,-9,7.5,3],[6,-10,7,2.8],[-14,26,6,2.6]];
+    var trees=[[1.55,15.2,4.6,1.5],[-2.7,19.9,3.6,1.0],[-2.2,1.6,4.2,1.4],[-2.6,25.5,5,1.8],[12.5,8,6,2.4],[-8,3,6.5,2.6],[-9.5,14,7,2.8],[15,18,6.5,2.5],[18,-2,8,3],[-6,-9,7.5,3],[6,-10,7,2.8],[-14,26,6,2.6]];
     var r=rnd(5);
     trees.forEach(function(t){
       var zc=t[2]-t[3]*0.8;
@@ -465,6 +468,44 @@ function initThree(){
     });
   }
 
+  // ---- sagoma di una persona alta 1,75 m, trascinabile tra gli ambienti
+  var person=new THREE.Group(), personParts=[];
+  (function(){
+    var cloth=new THREE.MeshStandardMaterial({color:0x8f5f32,roughness:0.8}), skin=new THREE.MeshStandardMaterial({color:0xd9b393,roughness:0.7});
+    function part(geo,mat,x,y,z){var m=new THREE.Mesh(geo,mat);m.position.set(x,y,z);m.castShadow=true;person.add(m);personParts.push(m);return m;}
+    part(new THREE.CylinderGeometry(0.075,0.06,0.86,12),cloth,-0.09,0.43,0);
+    part(new THREE.CylinderGeometry(0.075,0.06,0.86,12),cloth,0.09,0.43,0);
+    part(new THREE.CapsuleGeometry(0.17,0.42,6,12),cloth,0,1.16,0).scale.set(1,1,0.62);
+    part(new THREE.CylinderGeometry(0.045,0.04,0.66,10),skin,-0.25,1.08,0);
+    part(new THREE.CylinderGeometry(0.045,0.04,0.66,10),skin,0.25,1.08,0);
+    part(new THREE.SphereGeometry(0.105,20,16),skin,0,1.645,0);
+    var ring=new THREE.Mesh(new THREE.RingGeometry(0.30,0.34,40),new THREE.MeshBasicMaterial({color:0xc8925c,transparent:true,opacity:0.9,side:THREE.DoubleSide}));
+    ring.rotation.x=-Math.PI/2; ring.position.y=0.015; person.add(ring); personParts.push(ring);
+    var hit=new THREE.Mesh(new THREE.CylinderGeometry(0.34,0.34,1.75,12),new THREE.MeshBasicMaterial({visible:false}));
+    hit.position.y=0.875; person.add(hit); personParts.push(hit);
+  })();
+  person.position.set(5.3,0,13.3);
+  scene.add(person);
+  var personOn=true, dragPerson=false, groundHit=null;
+  document.getElementById('tPerson').onclick=function(){personOn=!personOn;person.visible=personOn;this.classList.toggle('on',personOn);dirty=true;};
+  function rayFrom(e){var r=canvas.getBoundingClientRect();var rc=new THREE.Raycaster();rc.setFromCamera({x:(e.clientX-r.left)/r.width*2-1,y:-(e.clientY-r.top)/r.height*2+1},camera);return rc;}
+  canvas.addEventListener('pointerdown',function(e){
+    if(!personOn) return;
+    var h=rayFrom(e).intersectObjects(personParts,false)[0];
+    if(!h) return;
+    dragPerson=true; orbit.enabled=false; e.stopImmediatePropagation();
+    try{canvas.setPointerCapture(e.pointerId);}catch(_){}
+  },{capture:true});
+  canvas.addEventListener('pointermove',function(e){
+    if(!dragPerson) return;
+    e.stopImmediatePropagation();
+    var hits=rayFrom(e).intersectObjects(floors,false).filter(function(h){return h.face&&h.face.normal.y>0.5&&h.object.visible;});
+    if(hits[0]){person.position.set(hits[0].point.x,hits[0].point.y,hits[0].point.z);dirty=true;}
+  },{capture:true});
+  function endDrag(e){ if(!dragPerson) return; dragPerson=false; e.stopImmediatePropagation(); orbit.enabled=(mode==='orbit'); }
+  canvas.addEventListener('pointerup',endDrag,{capture:true});
+  canvas.addEventListener('pointercancel',endDrag,{capture:true});
+
   // ---- comandi: orbita e passeggiata
   var orbit=new THREE.OrbitControls(camera,canvas);
   orbit.enableDamping=true; orbit.dampingFactor=0.08; orbit.maxPolarAngle=Math.PI*0.495; orbit.minDistance=1.5; orbit.maxDistance=80;
@@ -478,7 +519,7 @@ function initThree(){
     document.getElementById('tWalk').classList.toggle('on',m==='walk');
     document.getElementById('hint').textContent=m==='walk'
       ?'Trascina per guardarti intorno · tocca il pavimento per camminare · tasti W A S D'
-      :'Trascina per ruotare · pizzica o rotella per zoomare · due dita per spostare';
+      :'Trascina per ruotare · pizzica o rotella per zoomare · trascina la persona per spostarla';
     if(m==='orbit') document.getElementById('roomInfo').hidden=true;
     dirty=true;
   }
