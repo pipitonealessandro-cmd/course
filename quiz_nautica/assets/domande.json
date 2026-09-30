@@ -1,0 +1,266 @@
+{
+  "esempio": true,
+  "nota": "Domande di ESEMPIO scritte per il prototipo, NON sono i quiz ministeriali. Sostituire con la banca dati ufficiale usando tool/importa_csv.py.",
+  "domande": [
+    {
+      "id": "es-001",
+      "argomento": "Fanali e segnali",
+      "testo": "Di che colore è il fanale di via posto sul lato di dritta?",
+      "risposte": ["Rosso", "Verde", "Bianco"],
+      "corretta": 1,
+      "spiegazione": "Dritta = verde, sinistra = rosso."
+    },
+    {
+      "id": "es-002",
+      "argomento": "Fanali e segnali",
+      "testo": "Quale settore di orizzonte illumina ciascun fanale di via laterale?",
+      "risposte": ["112,5°", "135°", "225°"],
+      "corretta": 0,
+      "spiegazione": "I fanali laterali coprono 112,5° ciascuno, da prua fino a 22,5° a poppavia del traverso."
+    },
+    {
+      "id": "es-003",
+      "argomento": "Fanali e segnali",
+      "testo": "Il fanale di coronamento (di poppa) è:",
+      "risposte": ["Bianco, con settore di 135°", "Giallo, con settore di 225°", "Bianco, visibile su tutto l'orizzonte"],
+      "corretta": 0
+    },
+    {
+      "id": "es-004",
+      "argomento": "Fanali e segnali",
+      "testo": "Un suono breve emesso da un'unità in vista significa:",
+      "risposte": ["Sto accostando a sinistra", "Sto accostando a dritta", "Sto andando indietro"],
+      "corretta": 1,
+      "spiegazione": "1 breve = accosto a dritta, 2 brevi = accosto a sinistra, 3 brevi = macchine indietro."
+    },
+    {
+      "id": "es-005",
+      "argomento": "Fanali e segnali",
+      "testo": "Tre suoni brevi emessi da un'unità a motore in vista significano:",
+      "risposte": ["Sto accostando a dritta", "Richiesta di soccorso", "Sto usando la propulsione a marcia indietro"],
+      "corretta": 2
+    },
+    {
+      "id": "es-006",
+      "argomento": "Fanali e segnali",
+      "testo": "Almeno cinque suoni brevi e rapidi indicano:",
+      "risposte": ["Dubbio sulle intenzioni o sulla manovra dell'altra unità", "Unità alla fonda", "Uomo a mare"],
+      "corretta": 0
+    },
+    {
+      "id": "es-007",
+      "argomento": "Regolamento per evitare gli abbordi",
+      "testo": "Due unità a motore si incrociano con rischio di collisione. Chi deve manovrare?",
+      "risposte": ["Quella che vede l'altra alla propria sinistra", "Quella che vede l'altra alla propria dritta", "Quella più piccola"],
+      "corretta": 1,
+      "spiegazione": "Regola 15: manovra chi ha l'altra unità sulla propria dritta."
+    },
+    {
+      "id": "es-008",
+      "argomento": "Regolamento per evitare gli abbordi",
+      "testo": "Due unità a motore navigano con rotte opposte, prua contro prua. Cosa devono fare?",
+      "risposte": ["Accostare entrambe a sinistra", "Accostare entrambe a dritta", "Fermarsi entrambe"],
+      "corretta": 1,
+      "spiegazione": "Regola 14: entrambe accostano a dritta e si incrociano lasciandosi a sinistra."
+    },
+    {
+      "id": "es-009",
+      "argomento": "Regolamento per evitare gli abbordi",
+      "testo": "In caso di sorpasso, chi deve lasciare libera la rotta?",
+      "risposte": ["L'unità che viene raggiunta", "L'unità che raggiunge", "L'unità a vela, sempre"],
+      "corretta": 1,
+      "spiegazione": "Regola 13: chi raggiunge deve tenersi fuori dalla rotta dell'unità raggiunta, anche se è a vela."
+    },
+    {
+      "id": "es-010",
+      "argomento": "Regolamento per evitare gli abbordi",
+      "testo": "Di regola, un'unità a motore in navigazione deve lasciare libera la rotta a:",
+      "risposte": ["Un'unità a vela", "Un'unità a motore più veloce", "Qualsiasi unità più piccola"],
+      "corretta": 0
+    },
+    {
+      "id": "es-011",
+      "argomento": "Segnalamenti marittimi",
+      "testo": "Nella regione IALA A (Europa), entrando in porto, il segnale laterale rosso si lascia:",
+      "risposte": ["A dritta", "A sinistra", "Indifferentemente"],
+      "corretta": 1
+    },
+    {
+      "id": "es-012",
+      "argomento": "Segnalamenti marittimi",
+      "testo": "Il segnale di pericolo isolato ha come miraglio:",
+      "risposte": ["Due sfere nere sovrapposte", "Due coni neri con i vertici in alto", "Una sfera rossa"],
+      "corretta": 0,
+      "spiegazione": "È nero con una o più bande rosse orizzontali."
+    },
+    {
+      "id": "es-013",
+      "argomento": "Segnalamenti marittimi",
+      "testo": "Un segnale cardinale Nord ha come miraglio:",
+      "risposte": ["Due coni con i vertici in basso", "Due coni con i vertici in alto", "Due coni uniti per la base"],
+      "corretta": 1,
+      "spiegazione": "Il segnale cardinale Nord va passato a nord: i due coni puntano verso l'alto."
+    },
+    {
+      "id": "es-014",
+      "argomento": "Segnalamenti marittimi",
+      "testo": "Un segnale di acque sicure è:",
+      "risposte": ["A strisce verticali rosse e bianche", "Giallo", "Nero e giallo a bande orizzontali"],
+      "corretta": 0
+    },
+    {
+      "id": "es-015",
+      "argomento": "Navigazione",
+      "testo": "A quanti metri corrisponde un miglio nautico?",
+      "risposte": ["1609 m", "1852 m", "1000 m"],
+      "corretta": 1
+    },
+    {
+      "id": "es-016",
+      "argomento": "Navigazione",
+      "testo": "Il nodo è un'unità di misura di:",
+      "risposte": ["Distanza", "Velocità", "Profondità"],
+      "corretta": 1,
+      "spiegazione": "1 nodo = 1 miglio nautico all'ora."
+    },
+    {
+      "id": "es-017",
+      "argomento": "Navigazione",
+      "testo": "La latitudine di un punto è:",
+      "risposte": [
+        "La distanza angolare dal meridiano di Greenwich",
+        "La distanza angolare dall'equatore, misurata lungo il meridiano",
+        "La distanza in miglia dal polo più vicino"
+      ],
+      "corretta": 1
+    },
+    {
+      "id": "es-018",
+      "argomento": "Navigazione",
+      "testo": "Sulla carta nautica, un primo di latitudine corrisponde a:",
+      "risposte": ["Un miglio nautico", "Un chilometro", "Dieci miglia nautiche"],
+      "corretta": 0,
+      "spiegazione": "Per questo le distanze si misurano sulla scala delle latitudini, ai lati della carta."
+    },
+    {
+      "id": "es-019",
+      "argomento": "Navigazione",
+      "testo": "La declinazione magnetica è l'angolo compreso tra:",
+      "risposte": ["Nord vero e nord magnetico", "Nord magnetico e nord bussola", "Nord bussola e prua"],
+      "corretta": 0,
+      "spiegazione": "L'angolo tra nord magnetico e nord bussola è invece la deviazione, dovuta alle masse ferrose di bordo."
+    },
+    {
+      "id": "es-020",
+      "argomento": "Navigazione",
+      "testo": "La deviazione magnetica è causata da:",
+      "risposte": ["La posizione geografica", "Le masse ferrose e i campi magnetici di bordo", "Le correnti marine"],
+      "corretta": 1
+    },
+    {
+      "id": "es-021",
+      "argomento": "Meteorologia",
+      "testo": "Il barometro misura:",
+      "risposte": ["L'umidità dell'aria", "La pressione atmosferica", "La velocità del vento"],
+      "corretta": 1
+    },
+    {
+      "id": "es-022",
+      "argomento": "Meteorologia",
+      "testo": "Nell'emisfero nord, attorno a un centro di bassa pressione i venti ruotano:",
+      "risposte": ["In senso orario", "In senso antiorario", "Non ruotano"],
+      "corretta": 1
+    },
+    {
+      "id": "es-023",
+      "argomento": "Meteorologia",
+      "testo": "La scala Beaufort misura:",
+      "risposte": ["L'altezza delle maree", "La forza del vento", "La visibilità"],
+      "corretta": 1
+    },
+    {
+      "id": "es-024",
+      "argomento": "Meteorologia",
+      "testo": "Un rapido calo della pressione barometrica indica di solito:",
+      "risposte": ["Arrivo di bel tempo stabile", "Peggioramento del tempo in arrivo", "Nessun cambiamento"],
+      "corretta": 1
+    },
+    {
+      "id": "es-025",
+      "argomento": "Sicurezza e soccorso",
+      "testo": "Qual è il canale VHF riservato a soccorso, sicurezza e chiamata?",
+      "risposte": ["Canale 9", "Canale 16", "Canale 72"],
+      "corretta": 1
+    },
+    {
+      "id": "es-026",
+      "argomento": "Sicurezza e soccorso",
+      "testo": "Il messaggio che inizia con \"MAYDAY\" indica:",
+      "risposte": ["Un avviso di sicurezza alla navigazione", "Un pericolo grave e imminente che richiede soccorso immediato", "Un messaggio di urgenza senza pericolo imminente"],
+      "corretta": 1,
+      "spiegazione": "MAYDAY = pericolo, PAN PAN = urgenza, SÉCURITÉ = sicurezza."
+    },
+    {
+      "id": "es-027",
+      "argomento": "Sicurezza e soccorso",
+      "testo": "In caso di uomo a mare, tra le prime azioni da compiere c'è:",
+      "risposte": ["Lanciare subito un salvagente anulare verso la persona", "Aumentare la velocità per chiedere aiuto in porto", "Spegnere le luci di bordo"],
+      "corretta": 0,
+      "spiegazione": "Si dà l'allarme, si lancia il salvagente e non si perde mai di vista la persona in acqua."
+    },
+    {
+      "id": "es-028",
+      "argomento": "Sicurezza e soccorso",
+      "testo": "Durante il rifornimento di carburante bisogna:",
+      "risposte": ["Tenere il motore acceso", "Spegnere il motore e non fumare", "Tenere aperto il vano motore con il motore acceso"],
+      "corretta": 1
+    },
+    {
+      "id": "es-029",
+      "argomento": "Teoria dello scafo",
+      "testo": "Il lato di dritta di un'unità è:",
+      "risposte": ["Il lato destro guardando verso prua", "Il lato sinistro guardando verso prua", "La parte posteriore"],
+      "corretta": 0
+    },
+    {
+      "id": "es-030",
+      "argomento": "Teoria dello scafo",
+      "testo": "L'opera viva è:",
+      "risposte": ["La parte dello scafo sopra la linea di galleggiamento", "La parte immersa dello scafo", "La sovrastruttura"],
+      "corretta": 1
+    },
+    {
+      "id": "es-031",
+      "argomento": "Teoria dello scafo",
+      "testo": "Il pescaggio è:",
+      "risposte": [
+        "La distanza verticale tra la linea di galleggiamento e il punto più basso dello scafo",
+        "La larghezza massima dello scafo",
+        "L'altezza dell'albero sopra l'acqua"
+      ],
+      "corretta": 0
+    },
+    {
+      "id": "es-032",
+      "argomento": "Motori",
+      "testo": "Prima di avviare un motore entrobordo a benzina è importante:",
+      "risposte": ["Ventilare il vano motore per eliminare i vapori di benzina", "Chiudere tutte le prese d'aria", "Riscaldare il carburante"],
+      "corretta": 0,
+      "spiegazione": "I vapori di benzina sono più pesanti dell'aria e possono ristagnare in sentina causando esplosioni."
+    },
+    {
+      "id": "es-033",
+      "argomento": "Motori",
+      "testo": "Nel motore diesel l'accensione del combustibile avviene:",
+      "risposte": ["Tramite la candela", "Per compressione", "Tramite lo spinterogeno"],
+      "corretta": 1
+    },
+    {
+      "id": "es-034",
+      "argomento": "Motori",
+      "testo": "Con un motore raffreddato ad acqua di mare, dopo l'avviamento bisogna controllare:",
+      "risposte": ["Che esca acqua dallo scarico o dallo spia di raffreddamento", "Il livello dell'olio del cambio", "La pressione degli pneumatici del carrello"],
+      "corretta": 0
+    }
+  ]
+}
