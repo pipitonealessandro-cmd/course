@@ -443,7 +443,7 @@ var simple=(function(){
     concrete:[139,139,136],porcelain:[205,199,190],plinth:[59,59,58],ceiling:[244,243,240],paving:[168,161,150],bark:[70,55,40],
     frame:[42,44,47],ceramic:[246,246,244],walnut:[94,63,39],lacquer_w:[236,235,231],lacquer:[200,193,182],black_matte:[27,27,27],
     black_glass:[15,15,15],top_stone:[30,30,30],sofa:[168,148,128],sofa2:[138,119,102],chair:[94,84,74],tv:[12,12,12],
-    rug:[189,182,169],oak_furn:[163,123,82],linen:[220,216,207],drive:[125,117,106]};
+    rug:[189,182,169],oak_furn:[163,123,82],linen:[220,216,207],drive:[125,117,106],soil:[74,54,38],lemon:[242,213,42],orange:[240,138,28],mandarin:[240,122,24],tomato:[200,40,28]};
   var cam={tx:2.4,ty:0,tz:10,yaw:-0.55,pitch:0.62,dist:30}, roof=true, labels=true, FOV=50*Math.PI/180, NEAR=0.1;
   var C,FW,RT,UP,F,vw=1,vh=1,dpr=1;
   function setup(){
@@ -651,7 +651,8 @@ function initThree(){
     'Acciaio':M({c:0xc9cbcd,r:0.3,m:1}),'Vetro nero':M({c:0x0b0b0b,r:0.1}),'Nero opaco':M({c:0x1b1b1b,r:0.7}),
     'Specchio':M({c:0xdde3e6,r:0.02,m:1}),'Tessuto divano':M({c:0xa89480,r:1}),'Tessuto cuscini':M({c:0x8a7766,r:1}),
     'Lino letto':M({c:0xdcd8cf,r:1}),'Tappeto':M({c:0xbdb6a9,r:1}),'Tessuto sedie':M({c:0x5e544a,r:1}),
-    'Paralume':M({c:0x1e1e1e,r:0.4,m:0.5}),'Luce calda':M({c:0xffe2c0,e:0xffd4a0,ei:1.4}),'Striscia LED':M({c:0xffe2c0,e:0xffd4a0,ei:1.6})
+    'Paralume':M({c:0x1e1e1e,r:0.4,m:0.5}),'Luce calda':M({c:0xffe2c0,e:0xffd4a0,ei:1.4}),'Striscia LED':M({c:0xffe2c0,e:0xffd4a0,ei:1.6}),
+    'Terra':M({c:0x4a3626,r:1}),'Limoni':M({c:0xf2d52a,r:0.5}),'Arance':M({c:0xf08a1c,r:0.5}),'Mandarini':M({c:0xf07a18,r:0.5}),'Pomodori':M({c:0xc8281c,r:0.4})
   };
   var glass=new THREE.MeshPhysicalMaterial({color:0xcfe3e8,roughness:0.05,metalness:0,transparent:true,opacity:0.22,depthWrite:false});
   MAT['Vetro']=glass;
@@ -698,7 +699,7 @@ function initThree(){
     g.rotation.x=-Math.PI/2; g.position.set(2.5,-0.135,10); g.receiveShadow=true;
     var uv=g.geometry.attributes.uv; for(var i=0;i<uv.count;i++){uv.setXY(i,uv.getX(i)*100,uv.getY(i)*100);}
     scene.add(g); floors.push(g);
-    var trees=[[1.55,15.2,4.6,1.5],[-2.7,19.9,3.6,1.0],[-2.6,25.5,5,1.8],[12.5,8,6,2.4],[-8,3,6.5,2.6],[-9.5,14,7,2.8],[15,18,6.5,2.5],[18,-2,8,3],[-6,-9,7.5,3],[6,-10,7,2.8],[-14,26,6,2.6]];
+    var trees=[[1.55,15.2,4.6,1.5],[-2.7,19.9,3.6,1.0],[-2.6,25.5,5,1.8],[12.5,8,6,2.4],[-8,3,6.5,2.6],[-9.5,14,7,2.8],[15,18,6.5,2.5],[18,-2,8,3],[-6,-9,7.5,3],[6,-10,7,2.8],[-14,26,6,2.6],[1.3,-2.05,2.25,0.85],[4.1,-2.05,2.25,0.85],[6.9,-2.05,2.25,0.85]];
     var r=rnd(5);
     trees.forEach(function(t){
       var zc=t[2]-t[3]*0.8;

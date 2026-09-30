@@ -450,6 +450,11 @@ def build_materials():
     M["hedge"] = mat_plain("Siepe fitta", (0.025, 0.05, 0.015), rough=0.8)
     M["grass_hair"] = mat_grass_hair("Erba")
     M["bark"] = mat_stone("Corteccia", (0.10, 0.08, 0.06), (0.20, 0.16, 0.12), rough=0.9, scale=30)
+    M["soil"] = mat_stone("Terra", (0.06, 0.04, 0.03), (0.11, 0.08, 0.05), rough=0.95, scale=40, veins=False)
+    M["lemon"] = mat_plain("Limoni", (0.85, 0.72, 0.05), rough=0.45)
+    M["orange"] = mat_plain("Arance", (0.90, 0.33, 0.02), rough=0.45)
+    M["mandarin"] = mat_plain("Mandarini", (0.95, 0.42, 0.03), rough=0.45)
+    M["tomato"] = mat_plain("Pomodori", (0.65, 0.04, 0.02), rough=0.35)
     M["frame"] = mat_plain("Alluminio antracite", (0.035, 0.037, 0.04), rough=0.4, metal=0.3)
     M["frame_w"] = mat_plain("Alluminio bianco", (0.86, 0.86, 0.85), rough=0.35)
     M["glass"] = mat_glass("Vetro")
@@ -745,6 +750,40 @@ def tree(x, y, h=4.2, r=1.4, seed=1, density=2600):
              r * (0.75 if k == 0 else rnd.uniform(0.5, 0.65)), seed=seed * 10 + k, squash=0.8, leaf=0.075, density=density)
 
 
+def fruits(center, radius, mat, n, seed, r=0.045, squash=1.0):
+    """Frutti: piccole sfere sulla superficie della chioma."""
+    import random
+    rnd = random.Random(seed)
+    bm = bmesh.new()
+    for _ in range(n):
+        while True:
+            p = Vector((rnd.uniform(-1, 1), rnd.uniform(-1, 1), rnd.uniform(-1, 0.6)))
+            if 0.2 < p.length <= 1:
+                break
+        p = p.normalized() * radius * rnd.uniform(0.85, 1.02)
+        res = bmesh.ops.create_uvsphere(bm, u_segments=10, v_segments=7, radius=r * rnd.uniform(0.85, 1.15))
+        for v in res["verts"]:
+            v.co += Vector((center[0] + p.x, -(center[1] + p.y), center[2] + p.z * squash))
+    me = bpy.data.meshes.new("frutti")
+    bm.to_mesh(me)
+    bm.free()
+    for poly_ in me.polygons:
+        poly_.use_smooth = True
+    ob = link(bpy.data.objects.new("frutti", me))
+    ob.data.materials.append(bpy.data.materials[{"lemon": "Limoni", "orange": "Arance", "mandarin": "Mandarini", "tomato": "Pomodori"}[mat]])
+
+
+def citrus(x, y, kind, seed):
+    """Agrume nano: tronco corto, chioma tonda ~1,6 m, frutti."""
+    h_trunk = 0.9
+    bpy.ops.mesh.primitive_cone_add(vertices=10, radius1=0.06, radius2=0.04, depth=h_trunk,
+                                    location=(x, -y, GROUND + h_trunk / 2))
+    bpy.context.active_object.data.materials.append(bpy.data.materials["Corteccia"])
+    zc = GROUND + h_trunk + 0.65
+    blob("Foglie", (x, y, zc), 0.8, seed=seed, squash=0.85, leaf=0.05, density=4000)
+    fruits((x, y, zc), 0.8, kind, 28, seed + 500, r=0.045 if kind != "mandarin" else 0.035, squash=0.85)
+
+
 def hedge(x0, x1, y0, y1, h, seed=0):
     """Siepe squadrata: parallelepipedo suddiviso e deformato."""
     bpy.ops.mesh.primitive_cube_add(size=1, location=((x0 + x1) / 2, -(y0 + y1) / 2, GROUND + h / 2))
@@ -902,12 +941,17 @@ def add_exterior(M):
     box("paving", 2.95, 3.95, 19.85, y1, GROUND - 0.02, GROUND + 0.02)        # dal cancelletto
     # passo carrabile in diagonale dal cancello al garage (linea tratteggiata della piantina)
     slab("drive", DRIVE, GROUND - 0.02, GROUND + 0.015)
-    lawn_poly([[(-3.8, 13.3), (-3.4, 13.85), (-0.92, y1), (-3.8, y1)],
-               [(0.3, 12.35), (2.9, 12.35), (2.9, y1), (2.42, y1)]])
+    # giardino davanti (disegno di Alex): pavimentata la parte alta del triangolo a sinistra e la striscia a destra
+    # del passo carrabile dall'albero al cancelletto; l'albero resta in un'aiuola quadrata
+    slab("drive", [(-3.8, 13.3), (-3.4, 13.85), (-1.73, 18.8), (-3.8, 18.8)], GROUND - 0.02, GROUND + 0.015)
+    slab("drive", [(0.72, 14.1), (2.9, 14.1), (2.9, y1), (2.42, y1)], GROUND - 0.02, GROUND + 0.015)
+    box("soil", 0.95, 2.15, 14.6, 15.8, GROUND - 0.02, GROUND + 0.03)            # aiuola dell'albero
+    lawn_poly([[(-3.8, 18.8), (-1.73, 18.8), (-0.92, y1), (-3.8, y1)],
+               [(0.3, 12.35), (2.9, 12.35), (2.9, 14.1), (0.72, 14.1)]])
     # fioriera in muratura lungo il muro su strada davanti alla cucina
     for bx in ((4.15, 8.7, 20.15, 20.27), (4.15, 4.27, 20.15, y1)):
         box("plaster_ext", bx[0], bx[1], bx[2], bx[3], GROUND, GROUND + 0.35)
-    box("bark", 4.27, 8.7, 20.27, y1, GROUND, GROUND + 0.28)
+    box("soil", 4.27, 8.7, 20.27, y1, GROUND, GROUND + 0.28)
     box("paving", x0, 0.0, -2.1, 5.25, GROUND - 0.02, GROUND + 0.02)          # dietro il garage
     box("paving", 0.0, x1, -1.0, 0.0, GROUND - 0.02, GROUND + 0.02)           # passaggio lungo il retro (portoncino posteriore)
     box("paving", 7.1, x1, 0.0, 4.5, GROUND - 0.02, GROUND + 0.02)            # fianco destro, tutto pavimentato fino al bagno
@@ -946,8 +990,31 @@ def add_exterior(M):
         blob("Siepe", (xx, 12.9, GROUND + 0.3), 0.45, seed=20 + i, squash=0.7, leaf=0.05)
     for i, xx in enumerate([5.2, 6.5, 7.8]):
         blob("Siepe", (xx, 20.6, GROUND + 0.35), 0.5, seed=30 + i, squash=0.7, leaf=0.05)
-    for i, xx in enumerate([-3.0, -1.0, 1.0, 5.5, 7.6]):
+    for i, xx in enumerate([-3.0, -1.0]):
         blob("Siepe", (xx, -2.5, GROUND + 0.4), 0.55, seed=50 + i, squash=0.8, leaf=0.05)
+    # agrumi nella striscia di prato lungo il muro di fondo (nani, chioma ~1,6 m)
+    citrus(1.3, -2.05, "lemon", 61)
+    citrus(4.1, -2.05, "orange", 62)
+    citrus(6.9, -2.05, "mandarin", 63)
+    # orto: due cassoni rialzati 1 x 3 m sull'area pavimentata dietro il garage
+    for i, (bx0, bx1) in enumerate(((-3.35, -2.35), (-1.85, -0.85))):
+        by0, by1 = -1.7, 1.3
+        for a_, b_, c_, d_ in ((bx0, bx1, by0, by0 + 0.05), (bx0, bx1, by1 - 0.05, by1),
+                               (bx0, bx0 + 0.05, by0, by1), (bx1 - 0.05, bx1, by0, by1)):
+            box("walnut", a_, b_, c_, d_, GROUND + 0.02, GROUND + 0.47)
+        box("soil", bx0 + 0.05, bx1 - 0.05, by0 + 0.05, by1 - 0.05, GROUND + 0.02, GROUND + 0.42)
+        if i == 0:        # lattughe in file
+            for k in range(8):
+                for j in range(2):
+                    blob("Siepe", (bx0 + 0.3 + j * 0.4, by0 + 0.25 + k * 0.36, GROUND + 0.5), 0.13, seed=200 + k * 2 + j, squash=0.6, leaf=0.035, density=5000)
+        else:             # pomodori con tutori
+            for k in range(5):
+                yy = by0 + 0.35 + k * 0.58
+                for j in range(2):
+                    xx = bx0 + 0.3 + j * 0.4
+                    box("walnut", xx - 0.01, xx + 0.01, yy - 0.01, yy + 0.01, GROUND + 0.42, GROUND + 1.55)
+                    blob("Siepe", (xx, yy, GROUND + 1.0), 0.15, seed=300 + k * 2 + j, squash=2.2, leaf=0.04, density=4000)
+                    fruits((xx, yy, GROUND + 0.95), 0.14, "tomato", 5, 400 + k * 2 + j, r=0.03, squash=2.0)
     # alberi (uno al centro del giardino come nella piantina, uno sul retro) + contesto fuori lotto
     tree(1.55, 15.2, h=4.6, r=1.5, seed=3)       # albero del giardino, come nella piantina
     tree(-2.7, 19.9, h=3.6, r=1.0, seed=6)       # al posto della palma, nell'aiuola a sinistra
