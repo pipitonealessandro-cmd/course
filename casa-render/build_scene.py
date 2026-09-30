@@ -1546,17 +1546,22 @@ def main():
     ap.add_argument("--panos", default="")
     ap.add_argument("--pano-size", type=int, default=768)
     a = ap.parse_args(argv)
+    global SUN_AZ, SUN_EL, SHOE_H
     if a.variant == "finestra_ingresso":
         # variante: al posto delle feritoie una finestra da 75 cm unita al portoncino (unico serramento),
         # davanzali di entrambe le finestre del soggiorno a 0,85 m, scarpiera alta 80 cm
-        global SHOE_H
         TYPES["wl"] = (0.85, 2.30)
         for w in WALLS:
             if w[0] == 4.125 and w[1] == 11.275:
                 w[5] = [[11.30, 12.30, "wl"], [12.60, 13.60, "d"], [13.68, 14.43, "wl"], [16.70, 17.90, "p"]]
         SHOE_H = 0.80
+    if a.variant == "finestra60":
+        # variante: finestra 60 x 140 al posto delle feritoie (davanzale 0,90, sommità 2,30), scarpiera alta 85 cm
+        for w in WALLS:
+            if w[0] == 4.125 and w[1] == 11.275:
+                w[5] = [[11.30, 12.30, "w"], [12.60, 13.60, "d"], [13.72, 14.32, "w"], [16.70, 17.90, "p"]]
+        SHOE_H = 0.85
     if a.sun:
-        global SUN_AZ, SUN_EL
         az_real, el = (float(v) for v in a.sun.split(","))
         SUN_AZ = math.radians((az_real - 270) % 360)     # azimut reale -> sistema della piantina
         SUN_EL = math.radians(el)
