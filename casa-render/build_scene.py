@@ -488,7 +488,7 @@ def build_materials():
 
 SHOE_H = 0.85   # altezza della scarpiera dell'ingresso (sotto il davanzale a 0,90)
 TYPES = {"w": (0.9, 2.3), "w1": (1.0, 2.4), "wk": (1.1, 2.0), "wc": (1.00, 2.20),
-         "d": (0, 2.1), "wh": (1.80, 2.25), "g": (0, 2.4), "p": (0, 2.3), "wf": (1.20, 2.30), "wft": (0.90, 2.30), "sc": (0, 2.1)}
+         "d": (0, 2.1), "wh": (1.80, 2.25), "g": (0, 2.4), "p": (0, 2.3), "pd": (0, 2.1), "wf": (1.20, 2.30), "wft": (0.90, 2.30), "sc": (0, 2.1)}
 
 # [x1,y1,x2,y2,spessore,[[da,a,tipo],...], lato esterno (per perimetro) , estendi estremi]
 WALLS = [
@@ -498,7 +498,7 @@ WALLS = [
     [7.10, 5.625, 8.575, 5.625, EXT, [[7.30, 8.20, "p"]], "N"],   # porta finestra bagno grande
     [8.575, 5.625, 8.575, 18.625, EXT, [], "E"],
     [4.125, 18.625, 8.575, 18.625, EXT, [[5.65, 7.05, "wc"]], "S"],   # finestra lavello 1,40 x 1,20, davanzale 1,00
-    [4.125, 11.275, 4.125, 18.625, EXT, [[11.30, 12.30, "w"], [12.60, 13.60, "d"], [13.72, 14.32, "w"], [16.70, 17.90, "p"]], "W"],   # finestra 60x140 accanto al portoncino
+    [4.125, 11.275, 4.125, 18.625, EXT, [[11.30, 12.30, "pd"], [12.60, 13.60, "d"], [16.50, 17.70, "p"]], "W"],   # vetrata a terra del soggiorno (alta come il portoncino), porta finestra cucina a 80 cm dall'angolo
     [4.375, 6.775, 4.375, 11.025, EXT, [], None],
     [0.125, 6.775, 4.375, 6.775, EXT, [[3.05, 3.95, "d"]], None],
     [-3.675, 11.025, 4.375, 11.025, EXT, [[-3.175, -0.375, "g"], [1.40, 3.20, "w"]], "S"],
@@ -594,7 +594,7 @@ def add_walls():
             if sill > 0:
                 solid(a, b, 0, sill)
             solid(a, b, top, H)
-            if k[0] == "w" or k in ("p", "pv"):
+            if k[0] == "w" or k in ("p", "pv", "pd"):
                 window(horiz, fixed, a, b, t, sill, top, side, k)
             elif k == "g":
                 wall_piece("garage", horiz, fixed, a, b, t * 0.3, 0, top, t * 0.25)
@@ -1241,15 +1241,15 @@ def add_furniture():
     cabinets(8.10, 8.45, 17.55, 18.45, 1.45, 2.20, "y", 1, plinth=0)
     box("steel", 8.05, 8.45, 16.85, 17.50, 1.62, 1.70, bevel=0.003)            # cappa sottopensile
     box("led", 8.11, 8.13, 15.83, 16.79, 1.44, 1.45)
-    # angolo pranzo: al posto del divanetto una credenza da cucina 180 x 50 con alzata a vetrina sul muro
+    # angolo pranzo: al posto del divanetto una credenza da cucina 160 x 50 con alzata a vetrina sul muro
     # ovest; tavolo 160 x 85 al centro della cucina con 4 sedie (2 per lato).
-    cabinets(4.25, 4.75, 14.80, 16.60, 0, 0.88, "y", 4, mat="lacquer", plinth=0.08)    # base credenza
-    box("walnut", 4.25, 4.78, 14.78, 16.62, 0.88, 0.92, bevel=0.003)                   # piano in noce
-    cabinets(4.25, 4.60, 14.80, 16.60, 1.35, 2.20, "y", 4, mat="lacquer", plinth=0)     # alzata
+    cabinets(4.25, 4.75, 14.80, 16.40, 0, 0.88, "y", 4, mat="lacquer", plinth=0.08)    # base credenza 160
+    box("walnut", 4.25, 4.78, 14.78, 16.42, 0.88, 0.92, bevel=0.003)                   # piano in noce
+    cabinets(4.25, 4.60, 14.80, 16.40, 1.35, 2.20, "y", 4, mat="lacquer", plinth=0)     # alzata
     for k in range(4):                                                                 # ante a vetrina
-        ya = 14.80 + k * 0.45
-        box("glass", 4.600, 4.605, ya + 0.06, ya + 0.39, 1.41, 2.14)
-    box("led", 4.25, 4.59, 14.81, 16.59, 1.34, 1.35)                                   # luce sotto l'alzata
+        ya = 14.80 + k * 0.40
+        box("glass", 4.600, 4.605, ya + 0.05, ya + 0.35, 1.41, 2.14)
+    box("led", 4.25, 4.59, 14.81, 16.39, 1.34, 1.35)                                   # luce sotto l'alzata
     TX0, TX1, TY0, TY1 = 5.90, 6.75, 15.40, 17.00
     box("walnut", TX0, TX1, TY0, TY1, 0.72, 0.76, bevel=0.004)                         # tavolo 160 x 85
     for lx, ly in ((TX0 + 0.06, TY0 + 0.06), (TX1 - 0.10, TY0 + 0.06), (TX0 + 0.06, TY1 - 0.10), (TX1 - 0.10, TY1 - 0.10)):
@@ -1650,13 +1650,13 @@ def main():
         TYPES["wl"] = (0.85, 2.30)
         for w in WALLS:
             if w[0] == 4.125 and w[1] == 11.275:
-                w[5] = [[11.30, 12.30, "wl"], [12.60, 13.60, "d"], [13.68, 14.43, "wl"], [16.70, 17.90, "p"]]
+                w[5] = [[11.30, 12.30, "wl"], [12.60, 13.60, "d"], [13.68, 14.43, "wl"], [16.50, 17.70, "p"]]
         SHOE_H = 0.80
     if a.variant == "finestra60":
         # variante: finestra 60 x 140 al posto delle feritoie (davanzale 0,90, sommità 2,30), scarpiera alta 85 cm
         for w in WALLS:
             if w[0] == 4.125 and w[1] == 11.275:
-                w[5] = [[11.30, 12.30, "w"], [12.60, 13.60, "d"], [13.72, 14.32, "w"], [16.70, 17.90, "p"]]
+                w[5] = [[11.30, 12.30, "w"], [12.60, 13.60, "d"], [13.72, 14.32, "w"], [16.50, 17.70, "p"]]
         SHOE_H = 0.85
     if a.sun:
         az_real, el = (float(v) for v in a.sun.split(","))

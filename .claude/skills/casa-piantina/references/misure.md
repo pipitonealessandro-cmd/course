@@ -42,13 +42,14 @@ apertura verso l'interno a 90°.
 In metri, coordinata Y lungo il muro (vedi assets per la X):
 - Finestra bagno piccolo: y 2,30–3,10 (0,80 m), davanzale 1,00 m, sommità 2,40 m
 - Finestra studio: y 4,00–5,20 (1,20 m), davanzale 0,90 m, sommità 2,30 m
-- Finestra soggiorno: y 11,30–12,30 (1,00 m), davanzale 0,90 m, sommità 2,30 m (riportata alle misure originali
-  dopo aver provato una vetrata a terra alta 2,50 e poi 2,10: scartate dall'utente)
-- **Finestra dell'ingresso 60 × 140** (a destra del portoncino vista da fuori): y 13,72–14,32, davanzale 0,90,
-  sommità 2,30 (allineata alla finestra del soggiorno); sostituisce le feritoie. Scarpiera 120 x 28 alta 85 cm sotto.
-- Vetri del soggiorno (vano murario): 1,40 + 0,84 = **2,24 m²** su 19,95 m² = 1/8,9 (minimo 1/8 = 2,49 m²)
+- **Vetrata a terra del soggiorno**: y 11,30–12,30 (1,00 m), da terra a **2,10 m** (alta come il portoncino).
+  Storia: finestra 1,00 × 1,40 (davanzale 0,90) → vetrate 2,50 e 2,10 provate e scartate → di nuovo finestra →
+  infine (richiesta dell'utente) vetrata a terra. **Tolta la finestra 60 × 140** a destra del portoncino
+  (vista da fuori); la scarpiera dell'ingresso resta.
+- Vetri del soggiorno (vano murario): **2,10 m²** su 19,95 m² = 1/9,5 (minimo 1/8 = 2,49 m²): NON in regola;
+  per rientrare servirebbe la vetrata larga 1,20 (2,52 m²) o alta 2,40.
 - Portoncino d'ingresso: y 12,60–13,60 (1,00 m), a terra, sommità 2,10 m
-- Porta finestra cucina: y 16,70–17,90 (1,20 m), a terra, sommità 2,30 m — **spostata dall'utente** (prima 16,05–17,25): 60 cm dall'angolo interno, a filo del fronte dei mobili del lavello
+- Porta finestra cucina: y **16,50–17,70** (1,20 m), a terra, sommità 2,30 m — **80 cm dall'angolo interno** (richiesta dell'utente; prima 60 cm a filo dei mobili del lavello, prima ancora 16,05–17,25)
 
 ## Facciata nord (retro zona notte)
 
