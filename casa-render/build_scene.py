@@ -1554,8 +1554,20 @@ def export_boxes(path):
     for m, pts, z1 in POLYS:
         mi = mats.setdefault(m, len(mats))
         polys.append([mi, round(z1 * 100), [[round(x * 100), round(y * 100)] for x, y in pts]])
+    # aperture per la pianta 2D: [orizzontale, coordinata fissa, da, a, tipo, davanzale, sommità, lato, spessore] in cm
+    glass = [[round(v * 100) for v in (x0, x1, y0, y1, z0, z1)] for m, x0, x1, y0, y1, z0, z1 in BOXES if m == "glass"]
+    openings = []
+    for w in WALLS:
+        x1, y1, x2, y2, t, ops, side = w[:7]
+        horiz = (y1 == y2)
+        fixed = y1 if horiz else x1
+        for oa, ob, k in ops:
+            sill, top = TYPES[k]
+            openings.append([1 if horiz else 0, round(fixed * 100), round(oa * 100), round(ob * 100), k,
+                             round(sill * 100), round(top * 100), side or "", round(t * 100)])
     with open(path, "w") as fh:
-        json.dump({"mats": sorted(mats, key=mats.get), "boxes": out, "polys": polys}, fh, separators=(",", ":"))
+        json.dump({"mats": sorted(mats, key=mats.get), "boxes": out, "polys": polys, "openings": openings, "glass": glass},
+                  fh, separators=(",", ":"))
 
 
 NO_EXPORT = {"Foglie", "Siepe", "Siepe fitta", "Corteccia", "Prato", "Erba"}

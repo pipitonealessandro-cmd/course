@@ -1,3 +1,4 @@
+<meta charset="utf-8">
 <title>Casa di Alex</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..800&family=IBM+Plex+Mono:wght@400;500&display=swap">
@@ -38,6 +39,7 @@ button:focus-visible,.chip:focus-visible{outline:2px solid var(--oak);outline-of
 
 main{position:relative;flex:1;min-height:0}
 section.view{position:absolute;inset:0}
+#plan{position:absolute;inset:0;display:block;width:100%;height:100%;touch-action:none;outline:none}
 #three,#flat{position:absolute;inset:0;display:block;width:100%;height:100%;touch-action:none;outline:none}
 #flatDock{z-index:2}
 
@@ -108,6 +110,7 @@ figcaption b{color:var(--ink);font-weight:650;margin-right:6px}
     <div class="brand"><h1>Casa di Alex</h1><span>villa monofamiliare · ≈ 124 m² netti · h 2,70 m</span></div>
     <nav class="tabs" role="tablist">
       <button id="tab-3d" role="tab" aria-selected="true" data-view="v3d">Modello 3D</button>
+      <button id="tab-2d" role="tab" aria-selected="false" data-view="v2d">Pianta 2D</button>
       <button id="tab-360" role="tab" aria-selected="false" data-view="v360">Tour 360°</button>
       <button id="tab-gal" role="tab" aria-selected="false" data-view="vgal">Render</button>
     </nav>
@@ -144,6 +147,23 @@ figcaption b{color:var(--ink);font-weight:650;margin-right:6px}
           <button class="chip" id="fBack">Prova il 3D completo</button>
         </div>
     </div>
+    </section>
+
+    <!-- PIANTA 2D -->
+    <section class="view" id="v2d" hidden>
+      <canvas id="plan" tabindex="0" aria-label="Pianta 2D quotata della casa con arredi"></canvas>
+      <div class="room" id="planInfo" hidden><b id="planName"></b><span id="planDim"></span></div>
+      <div class="dock">
+        <div class="hint" id="plHint">Trascina per spostare · pizzica o rotella per zoomare · tocca un mobile per le sue misure</div>
+        <div class="row">
+          <button class="chip toggle on" id="plFurn" aria-pressed="true">Arredi</button>
+          <button class="chip toggle on" id="plDims" aria-pressed="true">Quote</button>
+          <button class="chip toggle" id="plMeasure" aria-pressed="false">Misura</button>
+          <button class="chip" id="plClear" hidden>Cancella misure</button>
+          <button class="chip" id="plFit">Adatta</button>
+        </div>
+        <div class="hint">Quote in metri (dal modello) · avvicinati per le misure di porte e finestre (cm) · P porta, PF porta finestra · tratteggio = pensili</div>
+      </div>
     </section>
 
     <!-- TOUR 360 -->
@@ -287,11 +307,12 @@ var current='v3d';
 function show(id){
   current=id;
   tabs.forEach(function(b){b.setAttribute('aria-selected',String(b.dataset.view===id));});
-  ['v3d','v360','vgal'].forEach(function(v){document.getElementById(v).hidden=(v!==id);});
+  ['v3d','v2d','v360','vgal'].forEach(function(v){document.getElementById(v).hidden=(v!==id);});
   if(id==='v3d'&&three) three.resize();
   if(id==='v3d') simple.resize();
   if(id==='v360') pano.open(pano.cur||PANOS[0].id);
   if(id==='vgal') gallery();
+  if(id==='v2d') plan.open();
   try{localStorage.setItem('casa-tab',id);}catch(e){}
 }
 tabs.forEach(function(b){b.onclick=function(){show(b.dataset.view);};});
@@ -538,8 +559,245 @@ var simple=(function(){
     xhr.onload=function(){ data=xhr.response; if(!data){document.getElementById('flatHint').textContent='Non riesco a caricare il modello semplificato. Usa il Tour 360°.';return;} view('ext'); };
     xhr.send(); requestAnimationFrame(loop);
   }
-  return {start:start, resize:resize};
+  return {start:start, resize:resize, COL:COL};
 })();
+
+// ---------------------------------------------------------------- pianta 2D quotata (canvas)
+// Stessi dati del modello semplice (boxes.json): muri sezionati a 1,25 m, arredi visti dall'alto,
+// aperture con le loro misure, quote del lotto e delle stanze, misura libera con aggancio ai bordi.
+var plan=(function(){
+  var cv=document.getElementById('plan'), ctx=cv.getContext('2d'), data=null, loading=false;
+  var W=1,H=1,dpr=1, cam={x:2.45,y:9.05,s:20}, fitted=false, dirty=true;
+  var showFurn=true, showDims=true, measuring=false, pts=[], sel=null;
+  var NAME={walnut:'Noce',lacquer:'Laccato greige',lacquer_t:'Laccato tortora',lacquer_w:'Laccato bianco',oak_furn:'Rovere',
+    sofa:'Divano',sofa2:'Cuscini del divano',linen:'Letto / tessile',ceramic:'Sanitario',chair:'Sedia',tv:'TV',rug:'Tappeto',
+    black_matte:'Nero opaco',top_stone:'Piano di lavoro',steel:'Acciaio',black_glass:'Forno / piano cottura',paving:'Pavimentazione esterna',
+    drive:'Masselli del passo carrabile',soil:'Terra',door_ext:'Portoncino',garage:'Portone del garage',plaster_ext:'Muro',plaster_int:'Muro',
+    frame:'Profilo antracite',frame_w:'Infisso',lemon:'Limoni',orange:'Arance',mandarin:'Mandarini',tomato:'Pomodori',plinth:'Zoccolo',
+    concrete:'Pavimento garage',oak:'Parquet',oak_y:'Parquet',porcelain:'Gres',bath_tile:'Gres bagno'};
+  var FLOOR={oak:1,oak_y:1,porcelain:1,bath_tile:1,concrete:1};
+  var SKIP={ceiling:1,roof:1,threshold:1,led:1};
+  var KIND={d:'P',sc:'Scorrevole',g:'Portone',p:'PF',pd:'Vetrata',wh:'F alta'};
+
+  function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim()||'#888';}
+  function rgb(c){var m=/^#?([0-9a-f]{6})$/i.exec(c); if(!m) return [128,128,128]; var v=parseInt(m[1],16); return [v>>16&255,v>>8&255,v&255];}
+  function mix(a,b,t){return 'rgb('+[0,1,2].map(function(i){return Math.round(a[i]*(1-t)+b[i]*t);}).join(',')+')';}
+  function cm(v){return (v/100).toFixed(2).replace('.',',');}
+  function sx(x){return (x-cam.x)*cam.s+W/2;}
+  function sy(y){return (y-cam.y)*cam.s+H/2;}
+  function wx(px){return (px-W/2)/cam.s+cam.x;}
+  function wy(py){return (py-H/2)/cam.s+cam.y;}
+
+  function resize(){
+    dpr=Math.min(window.devicePixelRatio||1,2); W=cv.clientWidth||1; H=cv.clientHeight||1;
+    cv.width=Math.round(W*dpr); cv.height=Math.round(H*dpr);
+    if(!fitted||!data) fit(); dirty=true;
+  }
+  function fit(){
+    var x0=-5.4,x1=10.3,y0=-4.6,y1=22.8, top=60, bot=150;     // spazio per barra e comandi
+    cam.s=Math.min(W/(x1-x0),(H-top-bot)/(y1-y0)); cam.x=(x0+x1)/2; cam.y=(y0+y1)/2-((top-bot)/2)/cam.s; fitted=true; dirty=true;
+  }
+
+  function draw(){
+    if(!dirty||document.getElementById('v2d').hidden) return; dirty=false;
+    var ink=rgb(css('--ink')), paper=rgb(css('--panel')), bg=css('--bg'), oak=css('--oak'), muted=css('--muted');
+    var dark=(ink[0]>128);
+    ctx.setTransform(dpr,0,0,dpr,0,0); ctx.fillStyle=bg; ctx.fillRect(0,0,W,H);
+    if(!data){ctx.fillStyle=muted; ctx.font='14px '+css('--body'); ctx.textAlign='center'; ctx.fillText(loading?'Carico la pianta…':'Pianta non disponibile',W/2,H/2); return;}
+    var M=data.mats, s=cam.s, lw=Math.max(0.6,Math.min(1.4,s/40));
+    function rect(b,fill,stroke,dash){
+      var x=sx(b[1]/100),y=sy(b[3]/100),w=(b[2]-b[1])/100*s,h=(b[4]-b[3])/100*s;
+      if(fill){ctx.fillStyle=fill; ctx.fillRect(x,y,w,h);}
+      if(stroke){ctx.strokeStyle=stroke; ctx.lineWidth=lw; ctx.setLineDash(dash||[]); ctx.strokeRect(x,y,w,h); ctx.setLineDash([]);}
+    }
+    // lotto (prato) e lastre esterne
+    var grass=dark?[44,58,40]:[205,219,190];
+    ctx.fillStyle=mix(grass,paper,0.25); ctx.fillRect(sx(-3.8),sy(-3.1),12.5*s,24.3*s);
+    data.polys.forEach(function(p){
+      var col=COLP[M[p[0]]]||[160,160,160]; ctx.fillStyle=mix(col,paper,0.45); ctx.beginPath();
+      p[2].forEach(function(q,i){var X=sx(q[0]/100),Y=sy(q[1]/100); if(i) ctx.lineTo(X,Y); else ctx.moveTo(X,Y);}); ctx.closePath(); ctx.fill();
+    });
+    // pavimenti e superfici a terra
+    data.boxes.forEach(function(b){var m=M[b[0]]; if(b[6]<=6&&!SKIP[m]&&m!=='plaster_int'&&m!=='plaster_ext'&&!(b[5]<0&&b[6]>3&&m==='black_matte')){
+      if(FLOOR[m]||m==='paving'||m==='drive'||m==='soil') rect(b,mix(COLP[m]||[200,200,200],paper,FLOOR[m]?0.72:0.45));}});
+    // arredi, dal più basso al più alto; i pensili (sopra 1,30 m) tratteggiati
+    if(showFurn){
+      var furn=data.boxes.filter(function(b){var m=M[b[0]]; return !SKIP[m]&&!FLOOR[m]&&m!=='plaster_int'&&m!=='plaster_ext'&&m!=='paving'&&m!=='drive'&&m!=='plinth'&&m!=='frame_w'&&b[6]>6&&b[5]<260;});
+      furn.sort(function(a,b){return a[6]-b[6];});
+      var edge=mix(ink,paper,0.35);
+      furn.forEach(function(b){var m=M[b[0]];
+        if(b[5]>=130) rect(b,null,edge,[4,3]);
+        else rect(b,mix(COLP[m]||[180,180,180],paper,dark?0.35:0.5),edge);});
+      ctx.strokeStyle=mix([120,170,190],paper,0.2); ctx.lineWidth=Math.max(1,lw*1.2);
+      data.glass.forEach(function(g){ if(g[4]>200) return; ctx.strokeRect(sx(g[0]/100),sy(g[2]/100),(g[1]-g[0])/100*s,(g[3]-g[2])/100*s);});
+    }
+    // vani delle aperture: fondo chiaro (niente prato che traspare nelle porte)
+    ctx.fillStyle=mix(paper,ink,0.04);
+    data.openings.forEach(function(o){var f=o[1]/100,a=o[2]/100,b=o[3]/100,t=o[8]/200;
+      if(o[0]) ctx.fillRect(sx(a),sy(f-t),(b-a)*s,2*t*s); else ctx.fillRect(sx(f-t),sy(a),2*t*s,(b-a)*s);});
+    // muri: sezione a 1,25 m (le aperture restano vuote) + muri di confine e fioriere
+    var wall=mix(ink,paper,0.08);
+    data.boxes.forEach(function(b){var m=M[b[0]];
+      if(m==='plaster_int'&&b[5]<=125&&b[6]>=125) rect(b,wall);
+      else if(m==='plaster_ext'&&Math.min(b[2]-b[1],b[4]-b[3])>=8&&b[6]<=260) rect(b,mix(ink,paper,0.3));});
+    data.boxes.forEach(function(b){var m=M[b[0]]; if((m==='frame_w'&&b[5]<=125)||m==='door_ext'||m==='garage') rect(b,mix(ink,paper,0.55));});
+    // vetri delle finestre (linea doppia nel vano)
+    ctx.strokeStyle=mix([120,170,190],paper,0.1); ctx.lineWidth=Math.max(1,lw);
+    data.openings.forEach(function(o){ if(o[4]==='d'||o[4]==='sc'||o[4]==='g') return;
+      var f=o[1]/100,a=o[2]/100,b=o[3]/100,t=o[8]/200*0.35;
+      ctx.beginPath();
+      if(o[0]){ctx.moveTo(sx(a),sy(f-t));ctx.lineTo(sx(b),sy(f-t));ctx.moveTo(sx(a),sy(f+t));ctx.lineTo(sx(b),sy(f+t));}
+      else{ctx.moveTo(sx(f-t),sy(a));ctx.lineTo(sx(f-t),sy(b));ctx.moveTo(sx(f+t),sy(a));ctx.lineTo(sx(f+t),sy(b));}
+      ctx.stroke();});
+    // nomi e misure
+    var fs=Math.max(9.5,Math.min(15,s/2.6));
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ROOMS.forEach(function(r){
+      var X=sx(r[1]),Y=sy(r[2]);
+      ctx.font='700 '+fs+'px '+css('--body'); halo(r[0],X,Y-fs*0.6,ink,paper);
+      if(s>=17){ctx.font='500 '+(fs*0.85)+'px '+css('--mono'); halo(r[3],X,Y+fs*0.55,mix(ink,paper,0.3),paper);}
+    });
+    [['Giardino davanti',-1.2,16.2],['Giardino posteriore',4.0,-2.35],['Orto',-2.1,-0.2]].forEach(function(g){
+      ctx.font='600 '+(fs*0.9)+'px '+css('--body'); halo(g[0],sx(g[1]),sy(g[2]),mix(ink,paper,0.25),paper);});
+    if(showDims){
+      if(s>=30){
+        var f1=Math.max(10,Math.min(13,s/5));
+        data.openings.forEach(function(o){
+          var f=o[1]/100,a=o[2]/100,b=o[3]/100,w=o[3]-o[2],k=o[4],h=o[6]-o[5],ext=!!o[7];
+          if(!ext){ if(k==='d'&&w>100) return;                         // varco aperto della doccia
+            ctx.font='600 '+(f1*0.9)+'px '+css('--mono'); ctx.textAlign='center';
+            ctx.save(); ctx.translate(o[0]?sx((a+b)/2):sx(f),o[0]?sy(f):sy((a+b)/2)); if(!o[0]) ctx.rotate(-Math.PI/2);
+            halo((k==='sc'?'scorrevole ':'')+w,0,0,oak,paper); ctx.restore(); return; }
+          var l1, l2='';
+          if(k[0]==='w'&&k!=='wh'){l1=w+'×'+h; l2='davanzale '+o[5];}
+          else if(k==='wh'){l1=w+'×'+h; l2='alta, da '+o[5];}
+          else if(k==='d'){l1='P '+w+'×'+o[6];}
+          else if(k==='g'){l1='portone '+w+'×'+o[6];}
+          else {l1=(KIND[k]||k)+' '+w+'×'+o[6]; l2='a terra';}
+          var sg={N:-1,W:-1,S:1,E:1}[o[7]]||1, off=o[8]/200+0.18;
+          ctx.font='600 '+f1+'px '+css('--mono');
+          if(o[0]){ ctx.textAlign='center'; var Y=sy(f+sg*off)+(sg>0?f1*0.6:-f1*(l2?1.6:0.6));
+            halo(l1,sx((a+b)/2),Y,oak,paper); if(l2){ctx.font='500 '+(f1*0.85)+'px '+css('--mono'); halo(l2,sx((a+b)/2),Y+f1*1.05,mix(ink,paper,0.35),paper);} }
+          else { ctx.textAlign=sg<0?'right':'left'; var X=sx(f+sg*off), Y2=sy((a+b)/2)-(l2?f1*0.5:0);
+            halo(l1,X,Y2,oak,paper); if(l2){ctx.font='500 '+(f1*0.85)+'px '+css('--mono'); halo(l2,X,Y2+f1*1.05,mix(ink,paper,0.35),paper);} }
+        });
+        ctx.textAlign='center';
+      }
+      dims(ink,paper);
+    }
+    compass(ink,paper,oak);
+    // misure dell'utente
+    ctx.strokeStyle=oak; ctx.fillStyle=oak; ctx.lineWidth=2;
+    for(var i=0;i<pts.length;i++){
+      var P=pts[i]; ctx.beginPath(); ctx.arc(sx(P[0]),sy(P[1]),4,0,6.3); ctx.fill();
+      if(i%2===1){var Q=pts[i-1]; ctx.beginPath(); ctx.moveTo(sx(Q[0]),sy(Q[1])); ctx.lineTo(sx(P[0]),sy(P[1])); ctx.stroke();
+        var d=Math.hypot(P[0]-Q[0],P[1]-Q[1]); ctx.font='700 13px '+css('--mono'); halo(fmtM(d),(sx(P[0])+sx(Q[0]))/2,(sy(P[1])+sy(Q[1]))/2-12,oak,paper);}
+    }
+    if(sel){ctx.strokeStyle=oak; ctx.lineWidth=2.5; ctx.strokeRect(sx(sel[1]/100),sy(sel[3]/100),(sel[2]-sel[1])/100*s,(sel[4]-sel[3])/100*s);}
+  }
+  function halo(t,x,y,col,paper){ctx.lineWidth=3.2; ctx.strokeStyle=mix(paper,paper,0); ctx.lineJoin='round'; ctx.strokeText(t,x,y); ctx.fillStyle=typeof col==='string'?col:mix(col,col,0); ctx.fillText(t,x,y);}
+  // catene di quote esterne (dal modello, in metri)
+  function chain(horiz,at,marks,ink,paper){
+    var c=mix(ink,paper,0.35); ctx.strokeStyle=c; ctx.lineWidth=1; ctx.font='500 11px '+css('--mono');
+    ctx.beginPath();
+    if(horiz){ctx.moveTo(sx(marks[0]),sy(at)); ctx.lineTo(sx(marks[marks.length-1]),sy(at));}
+    else{ctx.moveTo(sx(at),sy(marks[0])); ctx.lineTo(sx(at),sy(marks[marks.length-1]));}
+    marks.forEach(function(m){var X=horiz?sx(m):sx(at),Y=horiz?sy(at):sy(m);
+      ctx.moveTo(X-4,Y+4); ctx.lineTo(X+4,Y-4); if(horiz){ctx.moveTo(X,Y-6);ctx.lineTo(X,Y+6);}else{ctx.moveTo(X-6,Y);ctx.lineTo(X+6,Y);} });
+    ctx.stroke();
+    for(var i=1;i<marks.length;i++){var v=marks[i]-marks[i-1], t=v.toFixed(2).replace('.',','), mid=(marks[i]+marks[i-1])/2;
+      ctx.save(); if(horiz) ctx.translate(sx(mid),sy(at)-8); else {ctx.translate(sx(at)-8,sy(mid)); ctx.rotate(-Math.PI/2);}
+      halo(t,0,0,mix(ink,paper,0.1),paper); ctx.restore();}
+  }
+  function dims(ink,paper){
+    chain(true,-3.75,[-3.8,0.0,7.1,8.7],ink,paper);               // retro: blocco garage | zona notte | bagno grande
+    chain(true,-4.3,[-3.8,8.7],ink,paper);                       // larghezza del lotto
+    chain(true,21.75,[-3.8,4.0,8.7],ink,paper);                  // fronte strada: giardino | cucina
+    chain(false,9.3,[-3.1,0.0,18.75,21.2],ink,paper);           // destra: retro | casa | fascia su strada
+    chain(false,9.9,[-3.1,21.2],ink,paper);                      // lunghezza del lotto (filo interno)
+    chain(false,-4.35,[-3.1,5.25,11.15,21.2],ink,paper);        // sinistra: retro garage | garage | giardino davanti
+  }
+  function compass(ink,paper,oak){
+    var X=W-34,Y=84; ctx.fillStyle=mix(paper,paper,0); ctx.strokeStyle=mix(ink,paper,0.6); ctx.lineWidth=1;
+    ctx.beginPath(); ctx.arc(X,Y,20,0,6.3); ctx.fill(); ctx.stroke();
+    ctx.fillStyle=oak; ctx.beginPath(); ctx.moveTo(X+16,Y); ctx.lineTo(X,Y-5); ctx.lineTo(X,Y+5); ctx.closePath(); ctx.fill();   // nord = destra della piantina
+    ctx.fillStyle=mix(ink,paper,0.2); ctx.font='700 10px '+css('--body'); ctx.textAlign='center'; ctx.fillText('N',X+8,Y-11);
+  }
+  var COLP={};
+
+  // aggancio ai bordi di muri e mobili (entro 10 px) per misure precise
+  function snap(x,y){
+    var tol=10/cam.s, bx=null, by=null, dx=tol, dy=tol;
+    data.boxes.forEach(function(b){var m=data.mats[b[0]];
+      if(SKIP[m]||FLOOR[m]||(m==='plaster_int'&&!(b[5]<=125&&b[6]>=125))) return;
+      var x0=b[1]/100,x1=b[2]/100,y0=b[3]/100,y1=b[4]/100;
+      if(y>=y0-tol&&y<=y1+tol){[x0,x1].forEach(function(e){var d=Math.abs(e-x); if(d<dx){dx=d;bx=e;}});}
+      if(x>=x0-tol&&x<=x1+tol){[y0,y1].forEach(function(e){var d=Math.abs(e-y); if(d<dy){dy=d;by=e;}});}
+    });
+    return [bx!=null?bx:x, by!=null?by:y];
+  }
+  function pick(x,y){
+    var best=null;
+    data.boxes.forEach(function(b){var m=data.mats[b[0]];
+      if(SKIP[m]||FLOOR[m]||m==='plaster_int'||m==='plaster_ext'||m==='frame_w'||b[5]>=260||b[6]<=6) return;
+      if(x>=b[1]/100&&x<=b[2]/100&&y>=b[3]/100&&y<=b[4]/100){ if(!best||b[6]>best[6]) best=b; }});
+    return best;
+  }
+  function info(b){
+    var el=document.getElementById('planInfo');
+    if(!b){el.hidden=true; return;}
+    var m=data.mats[b[0]], w=b[2]-b[1], d=b[4]-b[3];
+    document.getElementById('planName').textContent=NAME[m]||m;
+    document.getElementById('planDim').textContent=Math.max(w,d)+' × '+Math.min(w,d)+' cm · da '+cm(b[5])+' a '+cm(b[6])+' m da terra';
+    el.hidden=false;
+  }
+
+  // interazione: trascina = sposta, pizzica/rotella = zoom, tocco = info o punto di misura
+  var ptrs={}, moved=false, last=null, pinch=null;
+  cv.addEventListener('pointerdown',function(e){cv.setPointerCapture(e.pointerId); ptrs[e.pointerId]=[e.offsetX,e.offsetY]; moved=false; last=[e.offsetX,e.offsetY];
+    var k=Object.keys(ptrs); if(k.length===2){var a=ptrs[k[0]],b=ptrs[k[1]]; pinch={d:Math.hypot(a[0]-b[0],a[1]-b[1]),s:cam.s};}});
+  cv.addEventListener('pointermove',function(e){ if(!ptrs[e.pointerId]) return; ptrs[e.pointerId]=[e.offsetX,e.offsetY];
+    var k=Object.keys(ptrs);
+    if(k.length===2&&pinch){var a=ptrs[k[0]],b=ptrs[k[1]],d=Math.hypot(a[0]-b[0],a[1]-b[1]); zoomAt((a[0]+b[0])/2,(a[1]+b[1])/2,pinch.s*d/pinch.d/cam.s); moved=true; return;}
+    var dx=e.offsetX-last[0],dy=e.offsetY-last[1]; if(Math.abs(dx)+Math.abs(dy)>3) moved=true;
+    if(moved){cam.x-=dx/cam.s; cam.y-=dy/cam.s; last=[e.offsetX,e.offsetY]; dirty=true;}});
+  function up(e){ if(!ptrs[e.pointerId]) return; delete ptrs[e.pointerId]; if(Object.keys(ptrs).length<2) pinch=null;
+    if(!moved&&data&&e.type==='pointerup'){
+      var x=wx(e.offsetX),y=wy(e.offsetY);
+      if(measuring){var p=snap(x,y);
+        if(pts.length%2===1){var q=pts[pts.length-1]; if(Math.abs(p[0]-q[0])<Math.abs(p[1]-q[1])*0.07) p[0]=q[0]; else if(Math.abs(p[1]-q[1])<Math.abs(p[0]-q[0])*0.07) p[1]=q[1];}
+        pts.push(p); document.getElementById('plClear').hidden=false;}
+      else {sel=pick(x,y); info(sel);}
+      dirty=true;}}
+  cv.addEventListener('pointerup',up); cv.addEventListener('pointercancel',up);
+  cv.addEventListener('wheel',function(e){e.preventDefault(); zoomAt(e.offsetX,e.offsetY,Math.exp(-e.deltaY*0.0015));},{passive:false});
+  function zoomAt(px,py,f){var x=wx(px),y=wy(py); cam.s=Math.max(8,Math.min(400,cam.s*f)); cam.x=x-(px-W/2)/cam.s; cam.y=y-(py-H/2)/cam.s; dirty=true;}
+
+  function toggle(id,on){var b=document.getElementById(id); b.classList.toggle('on',on); b.setAttribute('aria-pressed',String(on));}
+  document.getElementById('plFurn').onclick=function(){showFurn=!showFurn; toggle('plFurn',showFurn); dirty=true;};
+  document.getElementById('plDims').onclick=function(){showDims=!showDims; toggle('plDims',showDims); dirty=true;};
+  document.getElementById('plMeasure').onclick=function(){measuring=!measuring; toggle('plMeasure',measuring); sel=null; info(null);
+    document.getElementById('plHint').textContent=measuring?'Tocca due punti: le misure si agganciano ai bordi di muri e mobili':'Trascina per spostare · pizzica o rotella per zoomare · tocca un mobile per le sue misure'; dirty=true;};
+  document.getElementById('plClear').onclick=function(){pts=[]; this.hidden=true; dirty=true;};
+  document.getElementById('plFit').onclick=function(){fit();};
+
+  function loop(){draw(); requestAnimationFrame(loop);}
+  function open(){
+    resize();
+    if(!data&&!loading){ loading=true;
+      var xhr=new XMLHttpRequest(); xhr.open('GET','boxes.json'); xhr.responseType='json';
+      xhr.onload=function(){data=xhr.response; loading=false; if(data&&!data.openings) data.openings=[]; if(data&&!data.glass) data.glass=[]; dirty=true;};
+      xhr.onerror=function(){loading=false; dirty=true;}; xhr.send();
+      requestAnimationFrame(loop);
+    }
+    dirty=true;
+  }
+  window.addEventListener('resize',function(){if(!document.getElementById('v2d').hidden) resize();});
+  if(window.matchMedia) try{window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',function(){dirty=true;});}catch(e){}
+  return {open:open, setColors:function(c){COLP=c;}};
+})();
+plan.setColors(simple.COL);
+
 
 // ---------------------------------------------------------------- modello 3D (three.js)
 var three=null;
